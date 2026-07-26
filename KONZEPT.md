@@ -176,8 +176,13 @@ Stand 2026-07-26, nach dem Bau des Moduls (`comas` 0.1.0, Ergebnisbericht:
 - [ ] Zentrale Registry `comas-reg.json` für Mehr-Agenten-Betrieb — nicht gebaut.
       Der Spawner kann bereits nebenläufig starten (`run_many`, `ProcessHandle`,
       `wait_all`), aber es gibt kein zentrales Verzeichnis über mehrere Agenten
-- [ ] Entscheidung: öffentlich oder privat — bis dahin liegt bewusst **keine
-      Lizenzdatei** bei
+- [x] Entscheidung: öffentlich (Sichtbarkeit `public`) — MIT-Lizenz gesetzt am
+      2026-07-26. Begründung: COMAS startet lokale Prozesse und schreibt
+      Dateien, hat keine Netzfläche; eine netzauslösende Copyleft-Klausel wie
+      AGPL §13 würde hier nie greifen. Details:
+      `_agentjobs/OUT/coma-lizenz-und-metarepo.result.md`. **Tatsächliche
+      Veröffentlichung (Push, OneDrive-Spiegelung, Katalog-Eintrag) steht
+      weiterhin aus** — bewusst nicht Teil dieses Laufs
 - [ ] `llmauto` und `swarm-ai` auf COMAS umhängen — ausdrücklich **nicht** Teil
       des Bau-Auftrags; eigener, späterer Schritt. Beide bauen heute weiterhin
       ihre eigenen `claude`-Aufrufe
