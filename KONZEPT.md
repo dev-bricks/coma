@@ -1,8 +1,12 @@
 # COMAS — COMmunication for Autonomous Subagents
 
 > Modul-Konzept. Beschlossen von Lukas Geiger am 2026-07-26, erarbeitet in Session
-> „OPUS WORKSTATION". Status: **Konzept beschlossen, Referenzimplementierung existiert
-> und ist verifiziert** (siehe „Herkunft").
+> „OPUS WORKSTATION". Status: **Modul gebaut** (`comas` 0.1.0, 2026-07-26) — die
+> Spawn-Schicht ist aus den drei bestehenden Implementierungen extrahiert, 227 Tests
+> laufen ohne Prozessstart, ein echter Durchlauf über die Python-Schicht ist belegt.
+> Referenzimplementierung (`.bat`) existiert weiter und bleibt lokal.
+> Siehe `README.md`, „Offen" unten und den Ergebnisbericht
+> `_agentjobs/OUT/coma-modul-bauen.result.md`.
 
 ## Was COMAS ist
 
@@ -60,6 +64,13 @@ Fällt die Cloud aus, muss der lokale Agentenbetrieb weiterlaufen. Ein Koordinat
 dessen Prozess-Substrat am selben Netz hängt wie er selbst, hat keinen Rückfallweg.
 COMAS ist deshalb das Substrat, auf dem Roshambo aufsetzt — nicht sein Konkurrent.
 
+**`ellmos-agent-bridge` ist ebenfalls kein Konkurrent und kein künftiger
+COMAS-Importeur** — es verwaltet Partner-Metadaten (Fähigkeiten, Kosten,
+Erreichbarkeit, Konfigurationsdateien) und trifft Empfehlungen, startet aber
+nichts: im ganzen Paket kein einziger `subprocess`-Aufruf. Belegt in
+`_agentjobs/OUT/coma-agentbridge-grenze.result.md`. Entsteht später eine Kopplung,
+ist die einzig saubere Richtung agent-bridge → COMAS, nie umgekehrt.
+
 ## Grenze: was Modul ist und was lokal bleibt
 
 Damit das Modul nicht mit einer Maschine verwachsen geboren wird:
@@ -68,7 +79,10 @@ Damit das Modul nicht mit einer Maschine verwachsen geboren wird:
 - Das COMAS-Protokoll (Verzeichnis- und Dateikonvention, siehe unten)
 - Der Statusschreiber (`comas_status.py`)
 - Die Spawn-Schicht mit **CLI-Adaptern**: claude, codex, agy, kimi — der Unterschied
-  zwischen ihnen ist ein Kommando-Template plus Flags
+  zwischen ihnen ist ein Kommando-Template plus Flags. Diese Adapter werden **aus
+  bestehendem Code extrahiert** (`llmauto/core/runner.py`, `swarm-ai/tools/runner.py`,
+  das Dungeon-Skript, `START-LOCAL-AGENT.bat`), nicht neu entworfen — sonst entsteht
+  eine vierte Parallelimplementierung statt einer Konsolidierung.
 - Poll-/Lese-Hilfen für Orchestratoren
 
 **Lokal (Lukas-spezifisch, bleibt im `_control-center`):**
@@ -146,8 +160,30 @@ Muster für Spawn und Live-Status aus `swarm-ai`, Claim-Semantik aus
 
 ## Offen
 
-- [ ] `ellmos-module.v2.json`
-- [ ] CLI-Adapter über claude hinaus (codex, agy, kimi)
-- [ ] Zentrale Registry `comas-reg.json` für Mehr-Agenten-Betrieb
-- [ ] Lock-Schnittstelle definieren (vor der ersten Roshambo-Anbindung)
-- [ ] Entscheidung: öffentlich oder privat
+Stand 2026-07-26, nach dem Bau des Moduls (`comas` 0.1.0, Ergebnisbericht:
+`_agentjobs/OUT/coma-modul-bauen.result.md`).
+
+- [x] `ellmos-module.v2.json` — liegt vor, mit Adapter-Abschnitt und Stand je Adapter
+- [x] Lock-Schnittstelle definieren — `comas/locks.py`: `LockBackend` (Protocol
+      mit `claim`/`release`/`status`), `NullLock`, Kontextmanager `claimed()`.
+      **Nur definiert**, nicht implementiert; kein Import von `lock-master`,
+      `team-lock` oder Roshambo (per Test abgesichert)
+- [~] CLI-Adapter über claude hinaus — `codex`, `agy`, `kimi` liegen als **Gerüst**
+      vor: Kommandobau nach den Konventionen aus `~/CLAUDE.md`, getestet, mit
+      dokumentierten Fallstricken. **Nicht live geprüft** (`verified = False`);
+      der Spawner verweigert sie ohne ausdrückliches `allow_unverified=True`.
+      Offen bleibt je Adapter ein echter Durchlauf
+- [ ] Zentrale Registry `comas-reg.json` für Mehr-Agenten-Betrieb — nicht gebaut.
+      Der Spawner kann bereits nebenläufig starten (`run_many`, `ProcessHandle`,
+      `wait_all`), aber es gibt kein zentrales Verzeichnis über mehrere Agenten
+- [ ] Entscheidung: öffentlich oder privat — bis dahin liegt bewusst **keine
+      Lizenzdatei** bei
+- [ ] `llmauto` und `swarm-ai` auf COMAS umhängen — ausdrücklich **nicht** Teil
+      des Bau-Auftrags; eigener, späterer Schritt. Beide bauen heute weiterhin
+      ihre eigenen `claude`-Aufrufe
+- [ ] Plan-D-Deploy: Quellkopie nach `.CONTROL/coma/` in OneDrive — kommt separat,
+      jetzt, da das Modul steht
+- [ ] Widerspruch in der Referenzimplementierung: `_agentjobs/README.md:25`
+      dokumentiert `OUT/<jobid>.status` mit Inhalt `"running" -> "done <exitcode>"`.
+      Real geschrieben wird `OUT/comas.<jobid>.json`. Das Modul folgt der `.bat`
+      und diesem Konzept; die README ist zu korrigieren
