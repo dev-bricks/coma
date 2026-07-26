@@ -166,6 +166,20 @@ zwei Namen für dasselbe:
 „Verweigert und meldet das" ist besser als „wartet auf einen Klick, den niemand
 gibt". Fest verdrahtet bekäme ein Konsument stillschweigend das falsche Profil.
 
+**Was `dontAsk` *nicht* zusätzlich verengt (geprüft 2026-07-26, CLI 2.1.220):** Ein
+`Write` auf einen absoluten Pfad **außerhalb** des Arbeitsverzeichnisses wurde
+nicht verweigert — der Selbsttest lief mit cwd im COMAS-Repo und schrieb nach
+OneDrive, Exit 0. Deshalb setzt COMAS kein `cwd` von sich aus; `subprocess` erbt
+das des Aufrufers, wie im Bestand. Wer den Arbeitsbereich festlegen will,
+übergibt `cwd=` bzw. `--cwd`.
+
+Ebenfalls **nicht modelliert: `--add-dir`.** Das Flag existiert
+(`--add-dir <directories...>`, variadisch) und ist über `extra_args` erreichbar.
+Kein eigener Parameter, weil nicht verifiziert ist, ob mehrere Verzeichnisse als
+wiederholtes Flag oder als Werteliste zu übergeben sind — und Pfade können Kommas
+enthalten, die Komma-Verbindung der Werkzeuglisten ist hier also kein Ausweg. Eine
+geratene Kodierung wäre schlimmer als keine.
+
 Drei benannte Profile, jedes mit belegter Herkunft:
 
 ```python
@@ -298,7 +312,7 @@ gewährt alles, merkt sich nichts.
 ## Tests
 
 ```bat
-python -m pytest -q
+python -m pytest -q      :: 230 Tests
 ```
 
 **Kein Test startet einen echten Prozess.** `subprocess` wird überall ersetzt; das

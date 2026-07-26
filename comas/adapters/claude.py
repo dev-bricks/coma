@@ -96,6 +96,22 @@ class ClaudeAdapter(CliAdapter):
       Remote-Control-Session heisst das: der Agent steht still, bis jemand klickt.
 
     Siehe ``KONZEPT.md`` Lektion 4.
+
+    **Empirisch geprueft am 2026-07-26 (CLI 2.1.220):** ``dontAsk`` hat einen
+    ``Write`` auf einen absoluten Pfad **ausserhalb** des Arbeitsverzeichnisses
+    *nicht* verweigert (Selbsttest ``comas-selftest-nocwd``, Exit 0). Der Adapter
+    setzt deshalb kein ``cwd`` von sich aus — ``subprocess`` erbt das des
+    Aufrufers, wie im Bestand. Wer den Arbeitsbereich trotzdem festlegen will,
+    uebergibt ``cwd=``.
+
+    **Nicht modelliert: ``--add-dir``.** Das Flag existiert
+    (``--add-dir <directories...>``, ebenfalls variadisch) und erweitert den
+    Werkzeugzugriff auf zusaetzliche Verzeichnisse. Es ist ueber ``extra_args``
+    erreichbar. Bewusst kein eigener Parameter: Ob mehrere Verzeichnisse als
+    wiederholtes Flag (``--add-dir A --add-dir B``) oder als Werteliste hinter
+    einem Flag zu uebergeben sind, ist **nicht verifiziert**, und Pfade koennen
+    Kommas enthalten — die Komma-Verbindung wie bei Werkzeuglisten ist hier also
+    kein sicherer Ausweg. Eine geratene Kodierung waere schlimmer als keine.
     """
 
     name = "claude"

@@ -327,8 +327,14 @@ def check_manifest(
         )
 
     # 2. Aktualitaet gegen die Quelle
-    candidate = Path(source_dir) if source_dir else Path(str(manifest.get("source", "")))
-    if not str(candidate) or not candidate.is_dir():
+    # Erst pruefen, ob ueberhaupt eine Quelle genannt ist: Path("") ergaebe
+    # Path("."), und das ist ein Verzeichnis. Ein handgeschriebenes Manifest ohne
+    # "source" wuerde damit das aktuelle Arbeitsverzeichnis als COMAS-Quelle
+    # ansehen und lauter DRIFTED-Befunde erfinden. In einem Pruefbefehl ist ein
+    # Fehlalarm der teuerste Fehler.
+    declared = source_dir if source_dir else manifest.get("source")
+    candidate = Path(declared) if declared else None
+    if candidate is None or not candidate.is_dir():
         report.findings.append(
             Finding(
                 KIND_INFO,

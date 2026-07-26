@@ -225,6 +225,28 @@ class TestCheck:
         assert report.ok
         assert "nicht erreichbar" in report.render()
 
+    @pytest.mark.parametrize("source_value", ["", None, "   "])
+    def test_manifest_without_source_does_not_invent_drift(
+        self, scene, source_value, monkeypatch, tmp_path
+    ):
+        """Ein handgeschriebenes Manifest ohne Quelle darf keinen Fehlalarm geben.
+
+        ``Path("")`` ist ``Path(".")``, und das ist ein Verzeichnis — ohne Pruefung
+        wuerde das aktuelle Arbeitsverzeichnis als COMAS-Quelle gelten.
+        """
+        manifest = json.loads(scene["manifest"].read_text(encoding="utf-8"))
+        if source_value is None:
+            manifest.pop("source", None)
+        else:
+            manifest["source"] = source_value
+        scene["manifest"].write_text(
+            json.dumps(manifest, ensure_ascii=False), encoding="utf-8"
+        )
+        monkeypatch.chdir(tmp_path)
+        report = check_manifest(scene["manifest"])
+        assert report.ok
+        assert "nicht erreichbar" in report.render()
+
     def test_source_can_be_overridden(self, scene, tmp_path):
         other = make_source(tmp_path / "anders", "9.9.9")
         report = check_manifest(scene["manifest"], source_dir=other)
