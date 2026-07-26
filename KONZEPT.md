@@ -1,0 +1,153 @@
+# COMAS — COMmunication for Autonomous Subagents
+
+> Modul-Konzept. Beschlossen von Lukas Geiger am 2026-07-26, erarbeitet in Session
+> „OPUS WORKSTATION". Status: **Konzept beschlossen, Referenzimplementierung existiert
+> und ist verifiziert** (siehe „Herkunft").
+
+## Was COMAS ist
+
+Die **Lebenszyklus-Schicht** für Agenten: Wie entsteht ein Agent als eigener Prozess,
+und wie bleibt man mit ihm in Kontakt, solange er läuft?
+
+Genau eine Verantwortung. COMAS sperrt nichts, verwaltet keine Rechte und hält kein
+Gedächtnis.
+
+| Schicht | Frage | Zuständig |
+|---|---|---|
+| **Lebenszyklus** | Wie entsteht ein Agent, wie rede ich mit ihm? | **COMAS** |
+| Anspruch | Wer darf was anfassen? | `team-lock` → `lock-master` → Roshambo |
+| Gedächtnis | Wurde das schon versucht, wie ging es aus? | Roshambo |
+
+Die Verben trennen sauber: COMAS spricht `spawn`, `send`, `poll`, `result`.
+Roshambo-MCP spricht `claim`, `release`, `remember`, `recall`, `decide`, `status`.
+Keine Überschneidung — hätten zwei Systeme dieselbe Aufgabe, überlappte ihr Vokabular.
+
+## Warum es COMAS braucht — der belegte Anlass
+
+In einer **Remote-Control-Session** reicht Claude Code `--dangerously-skip-permissions`
+nicht an den Remote-Client durch. Belegt durch die offenen Issues
+[#71518](https://github.com/anthropics/claude-code/issues/71518) und
+[#29214](https://github.com/anthropics/claude-code/issues/29214).
+
+Folge: Jeder Tool-Aufruf fragt nach — auch bei Subagenten. Ist niemand am Rechner,
+**stehen sie still**. Am 2026-07-26 real passiert: zwei Agenten warteten stundenlang.
+
+Die Lösung ist nicht, mehr Regeln in eine Allowlist zu schreiben (das erzeugt nur
+Klick-Ermüdung und eine Liste, die Zustimmung behauptet, die es nie gab), sondern den
+Agenten **gar nicht erst in der RC-Session leben zu lassen**: ein eigener lokaler
+Prozess, Kommunikation über das Dateisystem.
+
+**Verifiziert am 2026-07-26:** Selbsttest aus einer laufenden RC-Session heraus
+gestartet — Exit 0, keine einzige Berechtigungsabfrage. Danach ein echter Auftrag
+(26 min, Opus) vollständig durchgelaufen, ohne dass der Nutzer etwas klicken musste.
+
+## Warum eigenes Modul
+
+- **llmauto** würde COMAS importieren (es ist heute claude-only; die Multi-CLI-Fähigkeit
+  kommt aus COMAS).
+- **swarm-ai** würde COMAS importieren (spawnt heute selbst per `subprocess`).
+- **Roshambo** würde COMAS importieren — es koordiniert Agenten, erzeugt aber keine.
+
+Drei Konsumenten aus drei Richtungen. Läge COMAS in einem davon, müssten die anderen
+zwei davon abhängen.
+
+## Der entscheidende Trennungsgrund: Offline
+
+Roshambo hängt an CockroachDB Cloud und AWS Bedrock. COMAS arbeitet mit Dateien und
+Prozessen — **ohne Konto, ohne Netz, ohne Cluster**.
+
+Fällt die Cloud aus, muss der lokale Agentenbetrieb weiterlaufen. Ein Koordinator,
+dessen Prozess-Substrat am selben Netz hängt wie er selbst, hat keinen Rückfallweg.
+COMAS ist deshalb das Substrat, auf dem Roshambo aufsetzt — nicht sein Konkurrent.
+
+## Grenze: was Modul ist und was lokal bleibt
+
+Damit das Modul nicht mit einer Maschine verwachsen geboren wird:
+
+**Modul (allgemein, veröffentlichbar):**
+- Das COMAS-Protokoll (Verzeichnis- und Dateikonvention, siehe unten)
+- Der Statusschreiber (`comas_status.py`)
+- Die Spawn-Schicht mit **CLI-Adaptern**: claude, codex, agy, kimi — der Unterschied
+  zwischen ihnen ist ein Kommando-Template plus Flags
+- Poll-/Lese-Hilfen für Orchestratoren
+
+**Lokal (Lukas-spezifisch, bleibt im `_control-center`):**
+- `_control-center/_agentjobs/` — die konkreten Job-Verzeichnisse
+- `START-LOCAL-AGENT.bat` — die Startschale, die aus Remote Control herausführt
+
+Die `.bat` ist Umgehung eines Client-Bugs, keine allgemeine Fähigkeit. Sie gehört nicht
+ins Modul.
+
+## Protokoll: ein Schreiber je Datei
+
+```
+IN/    <jobid>.md                       Auftrag (Freitext-Markdown)
+OUT/   <jobid>.result.md                Ergebnis
+       comas.<jobid>.json               Status      — nur der Runner schreibt
+       comas.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
+       comas.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
+       comas.<jobid>.console.log        stdout/stderr des Laufs
+DONE/  <jobid>.md                       erledigter Auftrag
+```
+
+**Ein Schreiber je Datei — kein Locking nötig, Kollision strukturell unmöglich.**
+Gelesen werden darf von allen. Das ist keine Vorsichtsmaßnahme, sondern eine Lektion:
+Eine geteilte Logdatei in OneDrive hat schon einmal zu Konfliktkopien geführt
+(Ticket `T-20260621-44`, `_TICKETS/_logs/INTAKE-TRIAGE-LOG.txt`, seitdem deprecated).
+
+`.jsonl` für die Kanäle, weil Anhängen atomar ist — ein Schreiber muss nicht erst
+lesen, parsen und neu schreiben.
+
+Bei mehreren Subagenten kommt eine zentrale Registry dazu (`comas-reg.json`, nur der
+Operator schreibt) plus je Agent ein eigenes Status-JSON — das Muster aus
+`swarm-ai/experiments/dungeon/elephant_path_treasure_hunt_live.py` (`live_<id>.json`
+je Agent + `experiment_live.json` zentral).
+
+## Harte Lektionen aus der Referenzimplementierung
+
+**1. Der `-p`-Prompt bleibt kurz und zeichenarm.** Lauf 1 des Selbsttests starb
+**still** — kein Ergebnis, Status blieb auf `running`, Fenster weg. Ursache: JSON mit
+`\"` im Prompt. **CMD kennt keine Backslash-Escapes**, der Befehl zerriss. Alle
+Anweisungen gehören in die Auftragsdatei; der Prompt zeigt nur darauf. (Dieselbe Regel
+gilt im Ökosystem bereits für `agy` und `codex`.)
+
+**2. Keine eingebetteten Interpreter-Einzeiler in der Startschale** — gleiches
+Quoting-Problem. Statusschreiben liegt deshalb in einer eigenen Datei.
+
+**3. Immer `> log 2>&1`.** Ein stiller Tod darf nicht möglich sein.
+
+**4. `--permission-mode dontAsk` ist für unbeaufsichtigte Läufe die bessere Wahl als
+Bypass** (Muster aus swarm-ai): Es fragt nie, sondern **verweigert**. Zusammen mit einer
+expliziten Werkzeugliste kann ein Agent damit strukturell nicht hängenbleiben. Bypass
+kann in Sonderfällen weiterhin nachfragen. „Verweigert und meldet das" ist besser als
+„wartet auf einen Klick, den niemand gibt".
+
+**5. `CLAUDECODE` aus der Umgebung entfernen** ist in swarm-ai üblich, war hier aber
+**nicht nötig** — der Bypass wirkte auch ohne. Ob das Leeren überhaupt greift, ist
+ungeklärt: Der Testagent maß `CLAUDECODE=1` innerhalb seines eigenen Bash-Aufrufs, und
+Claude Code setzt die Variable für seine eigenen Subprozesse selbst. Er hat damit nicht
+das geerbte Environment gemessen.
+
+## Gegen eine Schnittstelle programmieren, nicht gegen lock-master
+
+COMAS ruft Claims über eine schmale Schnittstelle (`claim` / `release` / `status`) auf,
+nicht gegen ein konkretes Modul. Dann ist der spätere Wechsel ein Zeilenwechsel im
+Stack-Manifest statt eines Umbaus:
+
+- `comalock` = COMAS + lock-master (lokal, offline)
+- `comaroshambo` = COMAS + Roshambo (verteilt, Cloud)
+
+## Herkunft
+
+Referenzimplementierung entstanden am 2026-07-26 unter
+`_control-center/_agentjobs/` + `START-LOCAL-AGENT.bat`; Protokoll dort in `README.md`.
+Muster für Spawn und Live-Status aus `swarm-ai`, Claim-Semantik aus
+`swarm-ai/tools/team_lock.py` (wird eigenes Modul `team-lock`).
+
+## Offen
+
+- [ ] `ellmos-module.v2.json`
+- [ ] CLI-Adapter über claude hinaus (codex, agy, kimi)
+- [ ] Zentrale Registry `comas-reg.json` für Mehr-Agenten-Betrieb
+- [ ] Lock-Schnittstelle definieren (vor der ersten Roshambo-Anbindung)
+- [ ] Entscheidung: öffentlich oder privat

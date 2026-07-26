@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Lokale Arbeitsspuren
+LOCK*.txt
+_codex/
+_scratch/
+*.log
+
+# Beweislauf-Artefakte (echte Jobs, keine Fixtures)
+_proof/
