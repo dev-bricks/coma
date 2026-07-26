@@ -6,7 +6,7 @@
   "category": "orchestration",
   "kind": "library",
   "status": "development",
-  "visibility": "internal",
+  "visibility": "public",
   "description": "Lebenszyklus-Schicht fuer Agenten: Wie entsteht ein Agent als eigener Prozess, und wie bleibt man mit ihm in Kontakt, solange er laeuft? Spawn-Schicht mit CLI-Adaptern (claude verifiziert; codex, agy, kimi als Geruest), Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. Sperrt nichts, verwaltet keine Rechte, haelt kein Gedaechtnis.",
   "package": "comas",
   "entrypoints": {

@@ -21,16 +21,22 @@ Keine Überschneidung.
 
 ## Wozu
 
+**COMAS umgeht keine Sicherheitsgrenze.** Es nutzt dokumentierte CLI-Flags
+(`--permission-mode`, `--allowedTools` und Verwandte), um einen Client-Bug zu
+umschiffen, nicht um eine Prüfung zu deaktivieren.
+
 In einer **Remote-Control-Session** reicht Claude Code `--dangerously-skip-permissions`
 nicht an den Remote-Client durch (offene Issues
 [#71518](https://github.com/anthropics/claude-code/issues/71518),
 [#29214](https://github.com/anthropics/claude-code/issues/29214)). Folge: Jeder
 Tool-Aufruf fragt nach — auch bei Subagenten. Ist niemand am Rechner, **stehen sie
-still**.
+still**: unbeaufsichtigte Agenten warten auf Klicks, die niemand gibt.
 
 Die Lösung ist nicht, mehr Regeln in eine Allowlist zu schreiben, sondern den
 Agenten **gar nicht erst in der RC-Session leben zu lassen**: ein eigener lokaler
-Prozess, Kommunikation über das Dateisystem.
+Prozess ausserhalb dieser Session, Kommunikation über das Dateisystem. Welche
+Werkzeuge dieser Prozess nutzen darf, entscheidet weiterhin der Permission-Mode —
+COMAS setzt ihn nur an einer Stelle, an der er tatsächlich ankommt.
 
 ## Schnellstart
 
@@ -348,7 +354,9 @@ Es verwaltet Partner-Metadaten und trifft Empfehlungen, startet aber nichts.
 
 ## Stand
 
-Version 0.1.0, in Entwicklung. Offene Punkte in [`KONZEPT.md`](KONZEPT.md),
-Abschnitt „Offen" — unter anderem die zentrale Registry `comas-reg.json` für den
-Mehr-Agenten-Betrieb und die Entscheidung, ob das Modul öffentlich wird. Bis diese
-Entscheidung fällt, liegt bewusst keine Lizenzdatei bei.
+Version 0.1.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMAS startet
+lokale Prozesse und schreibt Dateien, hat also keine Netzfläche; eine Copyleft-Klausel
+mit Netzauslöser wie AGPL §13 würde hier nie greifen). Damit ist das Modul auf
+Sichtbarkeit `public` vorbereitet — noch **nicht** veröffentlicht, siehe
+[`KONZEPT.md`](KONZEPT.md), Abschnitt „Offen", für die zentrale Registry
+`comas-reg.json` und den offenen Rest bis zum tatsächlichen Push.
