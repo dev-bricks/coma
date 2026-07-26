@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comas"
+version = "0.1.0"
+description = "COMAS - Lebenszyklus-Schicht für Agenten: Prozess starten, in Kontakt bleiben, Ergebnis abholen"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Lukas Geiger"},
+]
+keywords = [
+    "ai", "agent", "orchestration", "subprocess", "lifecycle", "cli-adapter",
+    "claude-code", "multi-agent",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Distributed Computing",
+]
+# Absichtlich leer. COMAS arbeitet mit Dateien und Prozessen -- ohne Konto, ohne
+# Netz, ohne Cluster. Das ist sein Trennungsgrund gegenüber Roshambo, nicht ein
+# noch nicht erledigter Schritt. Siehe KONZEPT.md, Abschnitt "Offline".
+dependencies = []
+
+[project.scripts]
+comas = "comas.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["comas*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]

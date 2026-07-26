@@ -1,0 +1,75 @@
+{
+  "schema": "ellmos.module.v2",
+  "id": "comas",
+  "display_name": "COMAS",
+  "version": "0.1.0",
+  "category": "orchestration",
+  "kind": "library",
+  "status": "development",
+  "visibility": "internal",
+  "description": "Lebenszyklus-Schicht fuer Agenten: Wie entsteht ein Agent als eigener Prozess, und wie bleibt man mit ihm in Kontakt, solange er laeuft? Spawn-Schicht mit CLI-Adaptern (claude verifiziert; codex, agy, kimi als Geruest), Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. Sperrt nichts, verwaltet keine Rechte, haelt kein Gedaechtnis.",
+  "package": "comas",
+  "entrypoints": {
+    "cli": "python -m comas",
+    "python": "comas.JobRunner"
+  },
+  "provides": [
+    "runtime.agent-spawn",
+    "runtime.agent-lifecycle",
+    "orchestration.job-protocol",
+    "orchestration.status-polling"
+  ],
+  "requires": [],
+  "optional": [
+    "control.locks"
+  ],
+  "conflicts": [],
+  "surfaces": [
+    "cli",
+    "library"
+  ],
+  "profiles": [],
+  "state": {
+    "location": "caller-provided",
+    "ownership": "caller"
+  },
+  "boundaries": {
+    "data": "user-local",
+    "network": "none",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ]
+  },
+  "source_of_truth": {
+    "type": "directory",
+    "path": "."
+  },
+  "adapters": [
+    {
+      "id": "claude",
+      "target": "claude-code-cli",
+      "status": "verified",
+      "note": "Vereinigungsmenge aus llmauto, swarm-ai und START-LOCAL-AGENT.bat; Flags gegen claude --help 2.1.220 geprueft."
+    },
+    {
+      "id": "codex",
+      "target": "codex-companion.mjs",
+      "status": "skeleton",
+      "note": "Kommandobau getestet, Aufrufweg nicht live geprueft. Konvention aus ~/CLAUDE.md."
+    },
+    {
+      "id": "agy",
+      "target": "antigravity-agy",
+      "status": "skeleton",
+      "note": "Kommandobau getestet, Aufrufweg nicht live geprueft. Rueckgabe zwingend ueber Datei (kein stdout)."
+    },
+    {
+      "id": "kimi",
+      "target": "kimi-code-cli",
+      "status": "skeleton",
+      "note": "Kommandobau getestet, Aufrufweg nicht live geprueft. -p nicht mit --yolo/--auto kombinierbar."
+    }
+  ]
+}
