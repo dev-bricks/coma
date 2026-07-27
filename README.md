@@ -359,7 +359,7 @@ Es verwaltet Partner-Metadaten und trifft Empfehlungen, startet aber nichts.
 
 ## Stand
 
-Version 0.1.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMA startet
+Version 0.2.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMA startet
 lokale Prozesse und schreibt Dateien, hat also keine Netzfläche; eine Copyleft-Klausel
 mit Netzauslöser wie AGPL §13 würde hier nie greifen). Das öffentliche Quellrepository
 ist `https://github.com/dev-bricks/coma`; der `.MODULES`-Eintrag bleibt ein

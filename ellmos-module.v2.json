@@ -2,7 +2,7 @@
   "schema": "ellmos.module.v2",
   "id": "coma",
   "display_name": "COMA",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "category": "orchestration",
   "kind": "runtime",
   "status": "development",
@@ -43,7 +43,7 @@
     ]
   },
   "source_of_truth": {
-    "type": "local-directory",
+    "type": "git-repository",
     "path": ".",
     "repository": "https://github.com/dev-bricks/coma"
   },
