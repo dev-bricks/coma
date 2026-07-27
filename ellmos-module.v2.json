@@ -30,8 +30,8 @@
   ],
   "profiles": [],
   "state": {
-    "location": "caller-provided",
-    "ownership": "caller"
+    "location": "external",
+    "ownership": "external"
   },
   "boundaries": {
     "data": "user-local",
@@ -43,8 +43,9 @@
     ]
   },
   "source_of_truth": {
-    "type": "directory",
-    "path": "."
+    "type": "local-directory",
+    "path": ".",
+    "repository": "https://github.com/dev-bricks/comas"
   },
   "adapters": [
     {

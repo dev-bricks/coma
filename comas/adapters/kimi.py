@@ -30,7 +30,7 @@ from .base import AdapterError, CliAdapter
 
 #: Absoluter Pfad aus ``~/CLAUDE.md`` — nicht im PATH.
 DEFAULT_EXECUTABLE = str(
-    Path(os.environ.get("LOCALAPPDATA", r"C:\Users\lukas\AppData\Local"))
+    Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
     / "Programs"
     / "kimi-code"
     / "kimi-code.exe"
