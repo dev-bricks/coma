@@ -158,6 +158,31 @@ Referenzimplementierung entstanden am 2026-07-26 unter
 Muster für Spawn und Live-Status aus `swarm-ai`, Claim-Semantik aus
 `swarm-ai/tools/team_lock.py` (wird eigenes Modul `team-lock`).
 
+## Not-Aus: WorkflowHooker gehört dazu, nicht daneben [U 2026-07-26]
+
+Der Kanal `to-agent.jsonl` ist **kein Komfortmerkmal, sondern das fehlende Sicherheitsmerkmal**.
+Ein Modul, dessen Zweck „läuft unbeaufsichtigt mit umgangener Berechtigungsabfrage" ist, braucht
+einen Abbruchweg.
+
+**Selbstprüfung an Prüfpunkten genügt dafür nicht.** Sie greift nur, wenn der Agent einen
+Prüfpunkt erreicht — in einer Schleife oder einem langen Aufruf kommt er nie an. **Nur ein Hook
+kann tatsächlich stoppen**, und nur `PreToolUse` kann einen Aufruf blockieren.
+
+Das passt zur eigenen Regel von WorkflowHooker: „`PreToolUse` nur für **echte Blocker** —
+niemals für Hinweise" (gemessen 287 ms je Tool-Aufruf). Ein Not-Aus ist der legitime Fall
+dieser Regel, nicht ihre Ausnahme. Für Hinweise ohne Dringlichkeit bleibt `PostToolUse` mit
+enger Bedingung (nur bei geänderter Datei-Mtime) oder die Selbstprüfung.
+
+**Auslieferungsentscheidung:** COMA liefert WorkflowHooker als **Nachlader** mit — nicht als
+harte Abhängigkeit, aber mit klarer Empfehlung. Begründung: Nutzer, die nur ein oder zwei
+Module übernehmen, bekommen sonst ein Werkzeug für unbeaufsichtigte Läufe **ohne Not-Aus**.
+COMA allein ist lauffähig; ohne Hooker fehlt aber die Möglichkeit, einen laufenden Agenten
+von außen zu stoppen. Das gehört in die README, nicht ins Kleingedruckte.
+
+Verwandt: WorkflowHooker plant bereits einen `TimeInjector` („Timebeat + ungelesene
+Nachrichten") — der Zustellweg ist dort konzeptionell vorgesehen, Status heute
+„Gerüst angelegt, nicht implementiert".
+
 ## Offen
 
 Stand 2026-07-26, nach dem Bau des Moduls (`comas` 0.1.0, Ergebnisbericht:
