@@ -1,7 +1,7 @@
 """Poll- und Lese-Hilfen fuer Orchestratoren — die Verben ``poll`` und ``result``.
 
 Alles hier ist **nur lesend**. Ein Orchestrator darf jede Datei des Protokolls
-lesen; schreiben darf er nur in ``to-agent.jsonl`` (siehe :mod:`comas.channels`).
+lesen; schreiben darf er nur in ``to-agent.jsonl`` (siehe :mod:`coma.channels`).
 
 Der Anwendungsfall, fuer den das gebaut ist: Eine Remote-Control-Session schreibt
 einen Auftrag, ein lokaler Prozess arbeitet ihn ab, und die RC-Session fragt von

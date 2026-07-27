@@ -4,7 +4,7 @@
 Drei Zusagen aus ``KONZEPT.md`` werden hier nachgeprueft, weil sie sonst beim
 naechsten Umbau still verloren gehen:
 
-1. **Extraktion, kein Import.** COMAS ist eine Kopie der Logik, keine
+1. **Extraktion, kein Import.** COMA ist eine Kopie der Logik, keine
    Abhaengigkeit von ``llmauto`` oder ``swarm-ai``. Waere es ein Import, laege
    die Schicht weiterhin in einem Konsumenten.
 2. **Keine Abhaengigkeiten.** Kein Netz, kein Konto, kein Cluster — nur
@@ -13,9 +13,9 @@ naechsten Umbau still verloren gehen:
 """
 from pathlib import Path
 
-import comas
+import coma
 
-PACKAGE = Path(comas.__file__).parent
+PACKAGE = Path(coma.__file__).parent
 SOURCES = sorted(PACKAGE.rglob("*.py"))
 
 
@@ -74,14 +74,14 @@ class TestNoDependencies:
                 if isinstance(node, ast.Import):
                     names = [alias.name.split(".")[0] for alias in node.names]
                 elif isinstance(node, ast.ImportFrom):
-                    if node.level:  # relativer Import innerhalb von comas
+                    if node.level:  # relativer Import innerhalb von coma
                         continue
                     names = [(node.module or "").split(".")[0]]
                 else:
                     continue
                 for name in names:
                     assert name in stdlib_ok | allowed_third_party, (
-                        f"{path.name} importiert {name!r} — COMAS bleibt "
+                        f"{path.name} importiert {name!r} — COMA bleibt "
                         "abhaengigkeitsfrei"
                     )
 
@@ -110,23 +110,23 @@ class TestSingleWriterPerFile:
 
 class TestPublicSurface:
     def test_the_four_verbs_are_reachable(self):
-        # spawn, send, poll, result — das Vokabular von COMAS.
-        assert hasattr(comas, "Spawner")  # spawn
-        assert hasattr(comas, "to_agent")  # send
-        assert hasattr(comas, "wait_for_finish")  # poll
-        assert hasattr(comas, "read_result")  # result
+        # spawn, send, poll, result — das Vokabular von COMA.
+        assert hasattr(coma, "Spawner")  # spawn
+        assert hasattr(coma, "to_agent")  # send
+        assert hasattr(coma, "wait_for_finish")  # poll
+        assert hasattr(coma, "read_result")  # result
 
     def test_lock_verbs_are_only_a_protocol(self):
         """claim/release/status gehoeren einem anderen System — hier nur die Form."""
-        assert hasattr(comas, "LockBackend")
-        assert not hasattr(comas, "claim")
-        assert not hasattr(comas, "release")
+        assert hasattr(coma, "LockBackend")
+        assert not hasattr(coma, "claim")
+        assert not hasattr(coma, "release")
 
     def test_everything_in_all_exists(self):
-        for name in comas.__all__:
-            assert hasattr(comas, name), f"__all__ nennt {name}, das es nicht gibt"
+        for name in coma.__all__:
+            assert hasattr(coma, name), f"__all__ nennt {name}, das es nicht gibt"
 
     def test_version_is_readable_without_import(self):
-        from comas.manifest import read_version
+        from coma.manifest import read_version
 
-        assert read_version(PACKAGE) == comas.__version__
+        assert read_version(PACKAGE) == coma.__version__

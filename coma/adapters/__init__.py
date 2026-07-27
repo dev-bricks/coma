@@ -5,7 +5,7 @@ Deshalb sind es Adapter und keine Unterklassen mit eigener Prozesslogik.
 
 ``claude``, ``codex`` und ``agy`` sind verifiziert. ``kimi`` bleibt ein Gerüst mit
 dokumentierter Aufrufkonvention: der Kommandobau ist getestet, der scharfe
-Aufrufweg nicht. :class:`comas.spawn.Spawner` startet sie nur mit
+Aufrufweg nicht. :class:`coma.spawn.Spawner` startet sie nur mit
 ausdruecklichem ``allow_unverified=True``.
 """
 from __future__ import annotations
@@ -56,7 +56,7 @@ def get_adapter(name: str = DEFAULT_ADAPTER, **kwargs: Any) -> CliAdapter:
 
 
 def describe_adapters() -> list[dict[str, Any]]:
-    """Selbstauskunft aller Adapter — Grundlage von ``comas adapters``."""
+    """Selbstauskunft aller Adapter — Grundlage von ``coma adapters``."""
     return [cls().describe() for _, cls in sorted(ADAPTERS.items())]
 
 

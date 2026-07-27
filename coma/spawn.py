@@ -1,6 +1,6 @@
-"""Prozesse starten und in Kontakt bleiben — das ``spawn``-Verb von COMAS.
+"""Prozesse starten und in Kontakt bleiben — das ``spawn``-Verb von COMA.
 
-Der Spawner kennt keine CLI. Er nimmt eine :class:`~comas.adapters.base.SpawnSpec`
+Der Spawner kennt keine CLI. Er nimmt eine :class:`~coma.adapters.base.SpawnSpec`
 und startet sie. Alles anbieterspezifische steckt im Adapter.
 
 Herkunft: ``subprocess.run``-Aufruf, Timeout- und Fehlerbehandlung extrahiert aus
@@ -62,7 +62,7 @@ def _read_tail(path: Path, limit: int = DEFAULT_LOG_TAIL_BYTES) -> str:
 class ProcessHandle:
     """Ein laufender Prozess, den man beobachten kann, ohne auf ihn zu warten.
 
-    Das ist die Haelfte von COMAS, die ueber ein bloss synchrones
+    Das ist die Haelfte von COMA, die ueber ein bloss synchrones
     ``subprocess.run`` hinausgeht: Ein Orchestrator will **wissen**, wie es steht,
     ohne zu blockieren.
     """
@@ -243,7 +243,7 @@ class Spawner:
         """Einen fertigen Bauplan ausfuehren.
 
         Getrennt von :meth:`run`, weil ein Orchestrator den Bauplan **vor** dem
-        Start protokollieren will (COMAS schreibt ihn in die Statusdatei).
+        Start protokollieren will (COMA schreibt ihn in die Statusdatei).
 
         Ist ``log_file`` gesetzt, gehen stdout und stderr zusammen in diese Datei
         — das Python-Gegenstueck zu ``> log 2>&1``. ``KONZEPT.md`` Lektion 3: ein

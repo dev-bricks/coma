@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from comas.manifest import (
+from coma.manifest import (
     KIND_DRIFTED,
     KIND_EXTRA,
     KIND_MISSING,
@@ -32,8 +32,8 @@ from comas.manifest import (
 
 
 def make_source(root, version="0.1.0"):
-    """Ein Miniatur-COMAS als Quelle."""
-    source = root / "quelle" / "comas"
+    """Ein Miniatur-COMA als Quelle."""
+    source = root / "quelle" / "coma"
     (source / "adapters").mkdir(parents=True)
     (source / "__init__.py").write_text(
         f'__version__ = "{version}"\n', encoding="utf-8"
@@ -103,11 +103,11 @@ class TestHelpers:
 class TestBuildAndRead:
     def test_manifest_shape(self, tmp_path):
         source = make_source(tmp_path)
-        manifest = build_manifest(vendored_path="third_party/comas", source_dir=source)
+        manifest = build_manifest(vendored_path="third_party/coma", source_dir=source)
         assert manifest["schema"] == SCHEMA
-        assert manifest["module"] == "comas"
+        assert manifest["module"] == "coma"
         assert manifest["version"] == "0.1.0"
-        assert manifest["path"] == "third_party/comas"
+        assert manifest["path"] == "third_party/coma"
         assert set(manifest["files"]) == {
             "__init__.py",
             "adapters/claude.py",
@@ -118,8 +118,8 @@ class TestBuildAndRead:
     def test_vendor_writes_the_file(self, tmp_path):
         source = make_source(tmp_path)
         target = tmp_path / "konsument" / MANIFEST_FILENAME
-        vendor(target, "vendor/comas", source_dir=source)
-        assert json.loads(target.read_text(encoding="utf-8"))["path"] == "vendor/comas"
+        vendor(target, "vendor/coma", source_dir=source)
+        assert json.loads(target.read_text(encoding="utf-8"))["path"] == "vendor/coma"
 
     def test_broken_manifest_is_reported(self, tmp_path):
         path = tmp_path / MANIFEST_FILENAME
@@ -145,14 +145,14 @@ class TestCheck:
         source = make_source(tmp_path)
         consumer = tmp_path / "konsument"
         consumer.mkdir()
-        copy_tree(source, consumer / "vendor" / "comas")
+        copy_tree(source, consumer / "vendor" / "coma")
         manifest_file = consumer / MANIFEST_FILENAME
-        vendor(manifest_file, "vendor/comas", source_dir=source)
+        vendor(manifest_file, "vendor/coma", source_dir=source)
         return {
             "source": source,
             "consumer": consumer,
             "manifest": manifest_file,
-            "copy": consumer / "vendor" / "comas",
+            "copy": consumer / "vendor" / "coma",
         }
 
     def test_clean_copy_has_no_drift(self, scene):
@@ -232,7 +232,7 @@ class TestCheck:
         """Ein handgeschriebenes Manifest ohne Quelle darf keinen Fehlalarm geben.
 
         ``Path("")`` ist ``Path(".")``, und das ist ein Verzeichnis — ohne Pruefung
-        wuerde das aktuelle Arbeitsverzeichnis als COMAS-Quelle gelten.
+        wuerde das aktuelle Arbeitsverzeichnis als COMA-Quelle gelten.
         """
         manifest = json.loads(scene["manifest"].read_text(encoding="utf-8"))
         if source_value is None:

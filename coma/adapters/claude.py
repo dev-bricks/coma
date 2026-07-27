@@ -1,6 +1,6 @@
 """Adapter fuer die Claude-Code-CLI — der vollstaendige, verifizierte Adapter.
 
-Dies ist die **Vereinigungsmenge** der drei Spawn-Stellen, die vor COMAS
+Dies ist die **Vereinigungsmenge** der drei Spawn-Stellen, die vor COMA
 unabhaengig voneinander ``claude``-Aufrufe zusammenbauten:
 
 ===============================================================  ==========================
@@ -99,7 +99,7 @@ class ClaudeAdapter(CliAdapter):
 
     **Empirisch geprueft am 2026-07-26 (CLI 2.1.220):** ``dontAsk`` hat einen
     ``Write`` auf einen absoluten Pfad **ausserhalb** des Arbeitsverzeichnisses
-    *nicht* verweigert (Selbsttest ``comas-selftest-nocwd``, Exit 0). Der Adapter
+    *nicht* verweigert (Selbsttest ``coma-selftest-nocwd``, Exit 0). Der Adapter
     setzt deshalb kein ``cwd`` von sich aus — ``subprocess`` erbt das des
     Aufrufers, wie im Bestand. Wer den Arbeitsbereich trotzdem festlegen will,
     uebergibt ``cwd=``.

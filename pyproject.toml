@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "comas"
+name = "coma"
 version = "0.1.0"
-description = "COMAS - Lebenszyklus-Schicht für Agenten: Prozess starten, in Kontakt bleiben, Ergebnis abholen"
+description = "COMA - Lebenszyklus-Schicht für Agenten: Prozess starten, in Kontakt bleiben, Ergebnis abholen"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -29,16 +29,17 @@ classifiers = [
     "Topic :: Software Development :: Build Tools",
     "Topic :: System :: Distributed Computing",
 ]
-# Absichtlich leer. COMAS arbeitet mit Dateien und Prozessen -- ohne Konto, ohne
+# Absichtlich leer. COMA arbeitet mit Dateien und Prozessen -- ohne Konto, ohne
 # Netz, ohne Cluster. Das ist sein Trennungsgrund gegenüber Roshambo, nicht ein
 # noch nicht erledigter Schritt. Siehe KONZEPT.md, Abschnitt "Offline".
 dependencies = []
 
 [project.scripts]
-comas = "comas.cli:main"
+coma = "coma.cli:main"
+comas = "coma.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["comas*"]
+include = ["coma*", "comas*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

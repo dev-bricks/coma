@@ -4,8 +4,8 @@ import subprocess
 
 import pytest
 
-from comas import ClaudeAdapter, SpawnError, Spawner
-from comas.spawn import MAX_PARALLEL_ITEMS, ProcessHandle, wait_all
+from coma import ClaudeAdapter, SpawnError, Spawner
+from coma.spawn import MAX_PARALLEL_ITEMS, ProcessHandle, wait_all
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def spawner():
 class TestRun:
     def test_success(self, spawner, monkeypatch, fake_run):
         runner = fake_run(returncode=0, stdout="Hallo Welt")
-        monkeypatch.setattr("comas.spawn.subprocess.run", runner)
+        monkeypatch.setattr("coma.spawn.subprocess.run", runner)
         result = spawner.run("Test")
         assert result["success"] is True
         assert result["output"] == "Hallo Welt"
@@ -29,7 +29,7 @@ class TestRun:
 
     def test_failure(self, spawner, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(returncode=1, stderr="Fehler")
+            "coma.spawn.subprocess.run", fake_run(returncode=1, stderr="Fehler")
         )
         result = spawner.run("Test")
         assert result["success"] is False
@@ -40,7 +40,7 @@ class TestRun:
         self, spawner, monkeypatch, fake_run
     ):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run",
+            "coma.spawn.subprocess.run",
             fake_run(raises=subprocess.TimeoutExpired(cmd="claude", timeout=30)),
         )
         result = spawner.run("Test")
@@ -50,7 +50,7 @@ class TestRun:
 
     def test_missing_cli_reports_minus_two(self, spawner, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(raises=FileNotFoundError("weg"))
+            "coma.spawn.subprocess.run", fake_run(raises=FileNotFoundError("weg"))
         )
         result = spawner.run("Test")
         assert result["returncode"] == -2
@@ -58,7 +58,7 @@ class TestRun:
 
     def test_other_os_error_reports_minus_three(self, spawner, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(raises=OSError("kaputt"))
+            "coma.spawn.subprocess.run", fake_run(raises=OSError("kaputt"))
         )
         result = spawner.run("Test")
         assert result["returncode"] == -3
@@ -66,7 +66,7 @@ class TestRun:
 
     def test_environment_and_argv_reach_subprocess(self, spawner, monkeypatch, fake_run):
         runner = fake_run(returncode=0)
-        monkeypatch.setattr("comas.spawn.subprocess.run", runner)
+        monkeypatch.setattr("coma.spawn.subprocess.run", runner)
         spawner.run("Test", model="sonnet")
         call = runner.calls[0]
         assert call["cmd"][call["cmd"].index("--model") + 1] == "sonnet"
@@ -81,8 +81,8 @@ class TestLogFile:
         self, spawner, tmp_path, monkeypatch, fake_run
     ):
         runner = fake_run(returncode=0, log_text="Zeile eins\nZeile zwei\n")
-        monkeypatch.setattr("comas.spawn.subprocess.run", runner)
-        log = tmp_path / "unter" / "comas.job.console.log"
+        monkeypatch.setattr("coma.spawn.subprocess.run", runner)
+        log = tmp_path / "unter" / "coma.job.console.log"
         result = spawner.run("Test", log_file=log)
         assert log.is_file()
         assert "Zeile zwei" in log.read_text(encoding="utf-8")
@@ -92,14 +92,14 @@ class TestLogFile:
         assert runner.calls[0]["kwargs"]["stderr"] is subprocess.STDOUT
 
     def test_parent_directory_is_created(self, spawner, tmp_path, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         log = tmp_path / "a" / "b" / "c.log"
         spawner.run("Test", log_file=log)
         assert log.parent.is_dir()
 
     def test_log_survives_a_timeout(self, spawner, tmp_path, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run",
+            "coma.spawn.subprocess.run",
             fake_run(raises=subprocess.TimeoutExpired(cmd="claude", timeout=1)),
         )
         log = tmp_path / "c.log"
@@ -110,7 +110,7 @@ class TestLogFile:
     def test_tail_limit_is_honoured(self, tmp_path, monkeypatch, fake_run):
         spawner = Spawner(ClaudeAdapter(), log_tail_bytes=10)
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(returncode=0, log_text="x" * 5000)
+            "coma.spawn.subprocess.run", fake_run(returncode=0, log_text="x" * 5000)
         )
         result = spawner.run("Test", log_file=tmp_path / "c.log")
         assert len(result["output"]) <= 10
@@ -127,7 +127,7 @@ class TestStartAndPoll:
             popen = fake_popen(cmd, **kwargs).program(None, None, 0)
             return popen
 
-        monkeypatch.setattr("comas.spawn.subprocess.Popen", factory)
+        monkeypatch.setattr("coma.spawn.subprocess.Popen", factory)
         handle = spawner.start("Test", log_file=tmp_path / "c.log")
         assert isinstance(handle, ProcessHandle)
         assert handle.pid == 4242
@@ -140,7 +140,7 @@ class TestStartAndPoll:
 
     def test_wait_returns_the_result(self, spawner, tmp_path, monkeypatch, fake_popen):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.Popen",
+            "coma.spawn.subprocess.Popen",
             lambda cmd, **kw: fake_popen(cmd, **kw).program(3),
         )
         handle = spawner.start("Test", log_file=tmp_path / "c.log")
@@ -150,14 +150,14 @@ class TestStartAndPoll:
         def boom(cmd, **kwargs):
             raise OSError("kein Prozess")
 
-        monkeypatch.setattr("comas.spawn.subprocess.Popen", boom)
+        monkeypatch.setattr("coma.spawn.subprocess.Popen", boom)
         with pytest.raises(SpawnError, match="kein Prozess"):
             spawner.start("Test", log_file=tmp_path / "c.log")
 
     def test_wait_all_collects_in_order(self, spawner, tmp_path, monkeypatch, fake_popen):
         codes = iter([7, 8])
         monkeypatch.setattr(
-            "comas.spawn.subprocess.Popen",
+            "coma.spawn.subprocess.Popen",
             lambda cmd, **kw: fake_popen(cmd, **kw).program(next(codes)),
         )
         handles = [
@@ -170,14 +170,14 @@ class TestStartAndPoll:
 
 class TestRunMany:
     def test_order_is_preserved(self, spawner, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         results = spawner.run_many(["A", "B", "C"], max_parallel=2)
         assert len(results) == 3
         assert all(result["success"] for result in results)
 
     def test_dicts_may_carry_overrides(self, spawner, monkeypatch, fake_run):
         runner = fake_run(returncode=0)
-        monkeypatch.setattr("comas.spawn.subprocess.run", runner)
+        monkeypatch.setattr("coma.spawn.subprocess.run", runner)
         spawner.run_many([{"prompt": "A", "model": "haiku"}, "B"], max_parallel=1)
         models = [
             call["cmd"][call["cmd"].index("--model") + 1] for call in runner.calls
@@ -213,13 +213,13 @@ class TestRunMany:
 class TestPipe:
     def test_returns_text(self, spawner, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(returncode=0, stdout="Antwort")
+            "coma.spawn.subprocess.run", fake_run(returncode=0, stdout="Antwort")
         )
         assert spawner.pipe("Test") == "Antwort"
 
     def test_raises_with_the_legacy_message(self, spawner, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(returncode=1, stderr="kaputt")
+            "coma.spawn.subprocess.run", fake_run(returncode=1, stderr="kaputt")
         )
         with pytest.raises(RuntimeError, match="Claude Fehler"):
             spawner.pipe("Test")

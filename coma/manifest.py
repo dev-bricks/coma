@@ -1,8 +1,8 @@
 """Das Manifest fuer mitgelieferte Kopien — mit **Pruefbefehl**, nicht nur Beschreibung.
 
-Konsumenten binden COMAS als mitgelieferte Kopie ein (kein PyPI-Zwang, kein
+Konsumenten binden COMA als mitgelieferte Kopie ein (kein PyPI-Zwang, kein
 Editable-Install ueber Ordnergrenzen) und aktualisieren ueber ein Manifest. Ein
-Manifest, das nur sagt „hier steckt COMAS 0.1 drin", merkt nicht, wenn 0.3 noetig
+Manifest, das nur sagt „hier steckt COMA 0.1 drin", merkt nicht, wenn 0.3 noetig
 waere — und schon gar nicht, wenn jemand in die Kopie hineingeschrieben hat.
 
 Vorbild ist ``_scripts/check_editable_installs.py``: Es macht genau diese Art
@@ -15,15 +15,15 @@ stiller Drift sichtbar. Zwei Dinge kommen hinzu:
    zwischen einem Pruefbefehl und einem Bericht: nur so kann ein Loop, ein Hook
    oder eine CI daran scheitern.
 
-Format (``comas-vendor.json``, neben der Kopie oder an beliebiger Stelle)::
+Format (``coma-vendor.json``, neben der Kopie oder an beliebiger Stelle)::
 
     {
-      "schema": "comas.vendor.v1",
-      "module": "comas",
+      "schema": "coma.vendor.v1",
+      "module": "coma",
       "version": "0.1.0",
       "vendored_at": "2026-07-26T12:00:00",
-      "source": "C:/_Local_DEV/repos/comas/comas",
-      "path": "third_party/comas",
+      "source": "C:/_Local_DEV/repos/coma/coma",
+      "path": "third_party/coma",
       "files": {"spawn.py": "sha256:…", "adapters/claude.py": "sha256:…"}
     }
 
@@ -42,10 +42,10 @@ from typing import Any
 
 from .status import now, write_json
 
-SCHEMA = "comas.vendor.v1"
-MODULE_NAME = "comas"
+SCHEMA = "coma.vendor.v1"
+MODULE_NAME = "coma"
 #: Uebliche Dateiname der Manifestdatei im Konsumentenprojekt.
-MANIFEST_FILENAME = "comas-vendor.json"
+MANIFEST_FILENAME = "coma-vendor.json"
 
 _VERSION_RE = re.compile(r"""^__version__\s*=\s*["']([^"']+)["']""", re.MULTILINE)
 _SKIP_DIRS = {"__pycache__", ".pytest_cache", ".git"}
@@ -241,11 +241,11 @@ class CheckReport:
     def render(self) -> str:
         lines = [
             f"Manifest : {self.manifest_file}",
-            f"Kopie    : {self.vendored_dir}  (COMAS {self.manifest_version})",
+            f"Kopie    : {self.vendored_dir}  (COMA {self.manifest_version})",
         ]
         if self.source_dir is not None:
             lines.append(
-                f"Quelle   : {self.source_dir}  (COMAS {self.source_version or '?'})"
+                f"Quelle   : {self.source_dir}  (COMA {self.source_version or '?'})"
             )
         lines.append("")
         lines.extend(str(finding) for finding in self.findings)
@@ -290,7 +290,7 @@ def check_manifest(
             Finding(
                 KIND_MISSING,
                 f"Kopie fehlt vollstaendig: {vendored_dir}",
-                f"COMAS nach {vendored_dir} kopieren oder 'path' im Manifest korrigieren",
+                f"COMA nach {vendored_dir} kopieren oder 'path' im Manifest korrigieren",
             )
         )
         return report
@@ -299,7 +299,7 @@ def check_manifest(
         target = vendored_dir / relative
         if not target.is_file():
             report.findings.append(
-                Finding(KIND_MISSING, f"{relative} fehlt in der Kopie", "COMAS neu kopieren")
+                Finding(KIND_MISSING, f"{relative} fehlt in der Kopie", "COMA neu kopieren")
             )
             continue
         actual = file_digest(target)
@@ -322,14 +322,14 @@ def check_manifest(
             Finding(
                 KIND_EXTRA,
                 f"{relative} liegt in der Kopie, steht aber nicht im Manifest",
-                "Datei entfernen oder Manifest neu schreiben (comas vendor)",
+                "Datei entfernen oder Manifest neu schreiben (coma vendor)",
             )
         )
 
     # 2. Aktualitaet gegen die Quelle
     # Erst pruefen, ob ueberhaupt eine Quelle genannt ist: Path("") ergaebe
     # Path("."), und das ist ein Verzeichnis. Ein handgeschriebenes Manifest ohne
-    # "source" wuerde damit das aktuelle Arbeitsverzeichnis als COMAS-Quelle
+    # "source" wuerde damit das aktuelle Arbeitsverzeichnis als COMA-Quelle
     # ansehen und lauter DRIFTED-Befunde erfinden. In einem Pruefbefehl ist ein
     # Fehlalarm der teuerste Fehler.
     declared = source_dir if source_dir else manifest.get("source")
@@ -352,9 +352,9 @@ def check_manifest(
             report.findings.append(
                 Finding(
                     KIND_OUTDATED,
-                    f"Quelle ist COMAS {report.source_version}, die Kopie "
+                    f"Quelle ist COMA {report.source_version}, die Kopie "
                     f"{report.manifest_version}",
-                    "COMAS neu kopieren und Manifest neu schreiben (comas vendor)",
+                    "COMA neu kopieren und Manifest neu schreiben (coma vendor)",
                 )
             )
 
@@ -365,7 +365,7 @@ def check_manifest(
                 Finding(
                     KIND_DRIFTED,
                     f"{relative} ist in der Quelle neu und fehlt in der Kopie",
-                    "COMAS neu kopieren",
+                    "COMA neu kopieren",
                 )
             )
         elif manifest_files[relative] != digest:
@@ -373,7 +373,7 @@ def check_manifest(
                 Finding(
                     KIND_DRIFTED,
                     f"{relative} hat sich in der Quelle geaendert",
-                    "COMAS neu kopieren (Version wurde nicht angehoben)",
+                    "COMA neu kopieren (Version wurde nicht angehoben)",
                 )
             )
     for relative in sorted(set(manifest_files) - set(source_digests)):
@@ -381,7 +381,7 @@ def check_manifest(
             Finding(
                 KIND_DRIFTED,
                 f"{relative} gibt es in der Quelle nicht mehr",
-                "COMAS neu kopieren",
+                "COMA neu kopieren",
             )
         )
 
@@ -393,7 +393,7 @@ def check_manifest(
 
 
 def find_manifests(root: str | os.PathLike[str]) -> list[Path]:
-    """Manifestdateien unter ``root`` finden — fuer ``comas check`` ohne Argument."""
+    """Manifestdateien unter ``root`` finden — fuer ``coma check`` ohne Argument."""
     base = Path(root)
     return sorted(
         path

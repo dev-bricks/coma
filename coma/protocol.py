@@ -1,13 +1,13 @@
-"""Das COMAS-Protokoll: Verzeichnis- und Dateikonvention.
+"""Das COMA-Protokoll: Verzeichnis- und Dateikonvention.
 
 ::
 
     IN/    <jobid>.md                       Auftrag (Freitext-Markdown)
     OUT/   <jobid>.result.md                Ergebnis
-           comas.<jobid>.json               Status      — nur der Runner schreibt
-           comas.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
-           comas.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
-           comas.<jobid>.console.log        stdout/stderr des Laufs
+           coma.<jobid>.json               Status      — nur der Runner schreibt
+           coma.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
+           coma.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
+           coma.<jobid>.console.log        stdout/stderr des Laufs
     DONE/  <jobid>.md                       erledigter Auftrag
 
 **Ein Schreiber je Datei — kein Locking noetig, Kollision strukturell
@@ -91,19 +91,19 @@ class JobPaths:
 
     @property
     def status_file(self) -> Path:
-        return self.out_dir / f"comas.{self.job_id}.json"
+        return self.out_dir / f"coma.{self.job_id}.json"
 
     @property
     def from_agent_file(self) -> Path:
-        return self.out_dir / f"comas.{self.job_id}.from-agent.jsonl"
+        return self.out_dir / f"coma.{self.job_id}.from-agent.jsonl"
 
     @property
     def to_agent_file(self) -> Path:
-        return self.out_dir / f"comas.{self.job_id}.to-agent.jsonl"
+        return self.out_dir / f"coma.{self.job_id}.to-agent.jsonl"
 
     @property
     def console_log(self) -> Path:
-        return self.out_dir / f"comas.{self.job_id}.console.log"
+        return self.out_dir / f"coma.{self.job_id}.console.log"
 
     def as_dict(self) -> dict[str, str]:
         return {
@@ -219,6 +219,6 @@ class JobBoard:
         jobs = set(self.pending()) | set(self.done())
         out_dir = self.root / OUT_DIR
         if out_dir.is_dir():
-            for path in out_dir.glob("comas.*.json"):
-                jobs.add(path.name[len("comas.") : -len(".json")])
+            for path in out_dir.glob("coma.*.json"):
+                jobs.add(path.name[len("coma.") : -len(".json")])
         return sorted(jobs)

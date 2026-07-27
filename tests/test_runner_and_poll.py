@@ -9,7 +9,7 @@ import subprocess
 
 import pytest
 
-from comas import (
+from coma import (
     ClaudeAdapter,
     JobRunner,
     is_finished,
@@ -34,7 +34,7 @@ class TestRun:
         self, runner, board, job, monkeypatch, fake_run
     ):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run", fake_run(returncode=0, log_text="fertig\n")
+            "coma.spawn.subprocess.run", fake_run(returncode=0, log_text="fertig\n")
         )
         job.result_file.parent.mkdir(parents=True, exist_ok=True)
         job.result_file.write_text("Ergebnis\n", encoding="utf-8")
@@ -55,7 +55,7 @@ class TestRun:
         assert job.console_log.is_file()
 
     def test_failure_leaves_the_job_in_in(self, runner, board, job, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=2))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=2))
         result = runner.run("testjob")
         assert result["status"]["state"] == "failed"
         assert result["archived"] is None
@@ -72,12 +72,12 @@ class TestRun:
             seen["state"] = state(board.paths("testjob"))
             return subprocess.CompletedProcess(cmd, 0)
 
-        monkeypatch.setattr("comas.spawn.subprocess.run", spy)
+        monkeypatch.setattr("coma.spawn.subprocess.run", spy)
         runner.run("testjob")
         assert seen["state"] == "running"
 
     def test_argv_is_recorded_in_the_status(self, runner, board, job, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         result = runner.run("testjob")
         argv = result["status"]["argv"]
         assert argv[0] == "claude"
@@ -89,7 +89,7 @@ class TestRun:
         self, runner, board, job, monkeypatch, fake_run
     ):
         capture = fake_run(returncode=0)
-        monkeypatch.setattr("comas.spawn.subprocess.run", capture)
+        monkeypatch.setattr("coma.spawn.subprocess.run", capture)
         runner.run("testjob")
         prompt = capture.calls[0]["cmd"][2]
         assert prompt.startswith("Lies die Datei ")
@@ -101,12 +101,12 @@ class TestRun:
         board.submit("alt", "a")
         board.submit("neu", "b")
         os.utime(board.paths("alt").job_file, (1_000_000, 1_000_000))
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         assert runner.run()["job_id"] == "alt"
 
     def test_timeout_is_reported_as_failed(self, runner, board, job, monkeypatch, fake_run):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.run",
+            "coma.spawn.subprocess.run",
             fake_run(raises=subprocess.TimeoutExpired(cmd="claude", timeout=30)),
         )
         result = runner.run("testjob")
@@ -115,7 +115,7 @@ class TestRun:
         assert job.job_file.is_file()
 
     def test_finalize_is_idempotent(self, runner, board, job, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         result = runner.run("testjob")
         again = runner.finalize(board.paths("testjob"), result)
         assert again["status"]["state"] == "done"
@@ -127,7 +127,7 @@ class TestStartAndHandle:
         self, runner, board, job, monkeypatch, fake_popen
     ):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.Popen",
+            "coma.spawn.subprocess.Popen",
             lambda cmd, **kw: fake_popen(cmd, **kw).program(None, 0),
         )
         handle = runner.start("testjob")
@@ -140,7 +140,7 @@ class TestStartAndHandle:
 
     def test_wait_finalizes(self, runner, board, job, monkeypatch, fake_popen):
         monkeypatch.setattr(
-            "comas.spawn.subprocess.Popen",
+            "coma.spawn.subprocess.Popen",
             lambda cmd, **kw: fake_popen(cmd, **kw).program(1),
         )
         assert runner.start("testjob").wait()["status"]["state"] == "failed"
@@ -153,8 +153,8 @@ class TestDryRun:
         def forbidden(*args, **kwargs):  # pragma: no cover - darf nicht passieren
             raise AssertionError("dry_run darf keinen Prozess starten")
 
-        monkeypatch.setattr("comas.spawn.subprocess.run", forbidden)
-        monkeypatch.setattr("comas.spawn.subprocess.Popen", forbidden)
+        monkeypatch.setattr("coma.spawn.subprocess.run", forbidden)
+        monkeypatch.setattr("coma.spawn.subprocess.Popen", forbidden)
         plan = runner.dry_run("testjob")
         assert plan["argv"][0] == "claude"
         assert plan["verified"] is True
@@ -166,7 +166,7 @@ class TestDryRun:
 
 class TestPollHelpers:
     def test_read_status_accepts_paths_and_files(self, runner, board, job, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         runner.run("testjob")
         paths = board.paths("testjob")
         assert read_status(paths)["state"] == "done"
@@ -175,7 +175,7 @@ class TestPollHelpers:
 
     def test_is_running_and_is_finished(self, board, job):
         paths = board.paths("testjob")
-        from comas import StatusWriter
+        from coma import StatusWriter
 
         writer = StatusWriter(paths.status_file)
         writer.start("testjob", "opus", paths.job_file, paths.result_file)
@@ -198,7 +198,7 @@ class TestPollHelpers:
         assert len(read_console_log(paths, tail_bytes=50)) == 50
 
     def test_wait_for_finish_returns_the_final_status(self, board, job):
-        from comas import StatusWriter
+        from coma import StatusWriter
 
         paths = board.paths("testjob")
         writer = StatusWriter(paths.status_file)
@@ -207,7 +207,7 @@ class TestPollHelpers:
         assert wait_for_finish(paths, timeout=1, interval=0.01)["state"] == "done"
 
     def test_wait_for_finish_times_out_without_killing_anything(self, board, job):
-        from comas import StatusWriter
+        from coma import StatusWriter
 
         paths = board.paths("testjob")
         StatusWriter(paths.status_file).start(
@@ -223,7 +223,7 @@ class TestPollHelpers:
             wait_for_finish(board.paths("testjob"), interval=0)
 
     def test_job_view_and_overview(self, runner, board, job, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         runner.run("testjob")
         view = job_view(board.paths("testjob"))
         assert view["state"] == "done"

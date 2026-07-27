@@ -9,7 +9,7 @@ import time
 
 import pytest
 
-from comas import JobBoard, JobNotFound, JobPaths, ProtocolError, check_job_id
+from coma import JobBoard, JobNotFound, JobPaths, ProtocolError, check_job_id
 
 
 class TestJobId:
@@ -33,13 +33,13 @@ class TestPaths:
         paths = JobPaths(tmp_path, "selftest")
         assert paths.job_file == tmp_path / "IN" / "selftest.md"
         assert paths.result_file == tmp_path / "OUT" / "selftest.result.md"
-        assert paths.status_file == tmp_path / "OUT" / "comas.selftest.json"
+        assert paths.status_file == tmp_path / "OUT" / "coma.selftest.json"
         assert (
             paths.from_agent_file
-            == tmp_path / "OUT" / "comas.selftest.from-agent.jsonl"
+            == tmp_path / "OUT" / "coma.selftest.from-agent.jsonl"
         )
-        assert paths.to_agent_file == tmp_path / "OUT" / "comas.selftest.to-agent.jsonl"
-        assert paths.console_log == tmp_path / "OUT" / "comas.selftest.console.log"
+        assert paths.to_agent_file == tmp_path / "OUT" / "coma.selftest.to-agent.jsonl"
+        assert paths.console_log == tmp_path / "OUT" / "coma.selftest.console.log"
         assert paths.done_file == tmp_path / "DONE" / "selftest.md"
 
     def test_as_dict_covers_every_artefact(self, tmp_path):

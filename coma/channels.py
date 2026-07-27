@@ -1,7 +1,7 @@
-"""Die beiden Nachrichtenkanaele — das ``send``-Verb von COMAS.
+"""Die beiden Nachrichtenkanaele — das ``send``-Verb von COMA.
 
-``comas.<jobid>.to-agent.jsonl``     Orchestrator -> Agent (nur der Orchestrator schreibt)
-``comas.<jobid>.from-agent.jsonl``   Agent -> Orchestrator (nur der Agent schreibt)
+``coma.<jobid>.to-agent.jsonl``     Orchestrator -> Agent (nur der Orchestrator schreibt)
+``coma.<jobid>.from-agent.jsonl``   Agent -> Orchestrator (nur der Agent schreibt)
 
 ``.jsonl`` und nicht ``.json``, weil **Anhaengen atomar ist**: Ein Schreiber muss
 nicht erst lesen, parsen und die ganze Datei neu schreiben. Zusammen mit „ein

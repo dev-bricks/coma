@@ -39,7 +39,7 @@ class CodexAdapter(CliAdapter):
         "Native codex exec flags gegen Codex CLI 0.145.0 geprüft (2026-07-27).",
         "Unter Windows direkter Node-Entrypoint statt CMD/PowerShell-Reparsing.",
         "Standard: read-only, ephemere Sitzung, Hook-Trust bleibt aktiv.",
-        "Ergebnis wird mit --output-last-message in die COMAS-Ergebnisdatei geschrieben.",
+        "Ergebnis wird mit --output-last-message in die COMA-Ergebnisdatei geschrieben.",
     )
 
     def __init__(

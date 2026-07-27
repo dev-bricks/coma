@@ -2,20 +2,20 @@
 """Statusschreiber und Kanaele.
 
 Der Statustest ist ein Kompatibilitaetstest: Die Schluessel muessen denen von
-``_agentjobs/comas_status.py`` entsprechen, sonst lesen ``.bat`` und
+``_agentjobs/coma_status.py`` entsprechen, sonst lesen ``.bat`` und
 Python-Schicht aneinander vorbei.
 """
 import json
 
 import pytest
 
-from comas import Channel, ChannelError, StatusWriter, from_agent, to_agent
-from comas.status import BASE_KEYS, STATE_DONE, STATE_FAILED, STATE_RUNNING, main
+from coma import Channel, ChannelError, StatusWriter, from_agent, to_agent
+from coma.status import BASE_KEYS, STATE_DONE, STATE_FAILED, STATE_RUNNING, main
 
 
 class TestStatusWriter:
     def test_start_writes_exactly_the_legacy_keys(self, tmp_path):
-        path = tmp_path / "comas.job.json"
+        path = tmp_path / "coma.job.json"
         data = StatusWriter(path).start("job", "opus", "IN/job.md", "OUT/job.result.md")
         assert list(data) == list(BASE_KEYS)
         assert data["state"] == STATE_RUNNING

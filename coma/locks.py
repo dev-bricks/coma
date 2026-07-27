@@ -1,15 +1,15 @@
 """Die Lock-Schnittstelle — **definiert, nicht implementiert.**
 
-COMAS sperrt nichts. Es ruft Claims ueber eine schmale Schnittstelle auf, nicht
+COMA sperrt nichts. Es ruft Claims ueber eine schmale Schnittstelle auf, nicht
 gegen ein konkretes Modul. Dann ist der spaetere Wechsel ein Zeilenwechsel im
 Stack-Manifest statt eines Umbaus:
 
-* ``comalock`` = COMAS + ``lock-master`` (lokal, offline)
-* ``comaroshambo`` = COMAS + Roshambo (verteilt, Cloud)
+* ``comalock`` = COMA + ``lock-master`` (lokal, offline)
+* ``comaroshambo`` = COMA + Roshambo (verteilt, Cloud)
 
 Hier steht deshalb **kein** Locking, sondern nur die Form, die ein Backend haben
 muss. Es gibt in diesem Modul keinen Import von ``lock-master``, ``team-lock``
-oder Roshambo — und das ist Absicht, nicht ein fehlender Schritt: COMAS muss
+oder Roshambo — und das ist Absicht, nicht ein fehlender Schritt: COMA muss
 dependency-frei und offline-faehig bleiben, das ist sein Existenzgrund
 (``KONZEPT.md``, Abschnitt „Der entscheidende Trennungsgrund: Offline").
 
@@ -17,7 +17,7 @@ Die Signaturen folgen ``swarm-ai/tools/team_lock.py`` (``claim`` Z. 144,
 ``release`` Z. 165, Anwesenheit Z. 191), damit ein Adapter darauf spaeter ohne
 Uebersetzungsschicht passt.
 
-Vokabular-Grenze: COMAS spricht ``spawn``, ``send``, ``poll``, ``result``. Ein
+Vokabular-Grenze: COMA spricht ``spawn``, ``send``, ``poll``, ``result``. Ein
 Lock-Backend spricht ``claim``, ``release``, ``status``. Keine Ueberschneidung —
 haetten zwei Systeme dieselbe Aufgabe, ueberlappte ihr Vokabular.
 """
@@ -36,9 +36,9 @@ class LockDenied(RuntimeError):
 
 @runtime_checkable
 class LockBackend(Protocol):
-    """Was ein Lock-Backend koennen muss, damit COMAS es benutzen kann.
+    """Was ein Lock-Backend koennen muss, damit COMA es benutzen kann.
 
-    Ein ``Protocol``, keine Basisklasse: Ein Backend muss nichts von COMAS
+    Ein ``Protocol``, keine Basisklasse: Ein Backend muss nichts von COMA
     importieren, um zu passen. Die Abhaengigkeit zeigt damit in keine Richtung.
     """
 
@@ -60,7 +60,7 @@ class LockBackend(Protocol):
 class NullLock:
     """Das Standard-Backend: gewaehrt alles, merkt sich nichts.
 
-    Damit laeuft COMAS ohne jedes Lock-Modul — und ein Konsument, der spaeter ein
+    Damit laeuft COMA ohne jedes Lock-Modul — und ein Konsument, der spaeter ein
     echtes Backend einsetzt, aendert genau eine Zeile.
     """
 
@@ -91,7 +91,7 @@ def claimed(
     Freigegeben wird auch, wenn im Block eine Ausnahme fliegt — wer sperrt, gibt
     frei; der Verfall ist nur ein Sicherheitsnetz.
 
-    COMAS ruft das **nirgends selbst auf**. Es ist die Form, in der ein
+    COMA ruft das **nirgends selbst auf**. Es ist die Form, in der ein
     Orchestrator einen Lauf umschliessen kann::
 
         with claimed(backend, "projekt/pfad", kind="project"):

@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from comas import JobBoard
+from coma import JobBoard
 
 
 @pytest.fixture

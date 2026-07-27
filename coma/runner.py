@@ -7,7 +7,7 @@ derselben Reihenfolge, damit beide Wege dieselben Artefakte hinterlassen:
 2. Verzeichnisse anlegen — ``.bat:56-57``
 3. ``to-agent.jsonl`` leer anlegen — ``.bat:58``
 4. Status auf ``running`` — ``.bat:60``
-5. Agent starten, stdout und stderr in ``comas.<jobid>.console.log`` — ``.bat:72``
+5. Agent starten, stdout und stderr in ``coma.<jobid>.console.log`` — ``.bat:72``
 6. Status auf ``done``/``failed`` mit Exitcode — ``.bat:75``
 7. Bei Exitcode 0: Auftrag nach ``DONE/`` verschieben; sonst bleibt er in ``IN/``
    liegen, damit nichts still verloren geht — ``.bat:77-83``
@@ -100,7 +100,7 @@ class JobHandle:
 
 
 class JobRunner:
-    """Startet Jobs nach dem COMAS-Protokoll.
+    """Startet Jobs nach dem COMA-Protokoll.
 
     ``adapter`` bestimmt, welche CLI laeuft. Ohne Angabe der ``claude``-Adapter in
     seiner Standardkonfiguration (``dontAsk`` plus explizite Werkzeugliste).

@@ -7,7 +7,7 @@ das mit Mocks arbeitet).
 """
 import pytest
 
-from comas.adapters import (
+from coma.adapters import (
     DEFAULT_ALLOWED_TOOLS,
     KNOWN_PERMISSION_MODES,
     MIRROR,

@@ -1,9 +1,14 @@
-# COMAS — COMmunication for Autonomous Subagents
+# COMA — COMmunication for Autonomous Subagents
+
+> **Namensmigration:** Das Projekt und das kanonische Python-Paket heißen
+> `COMA` bzw. `coma`. Der frühere Name `COMAS`/`comas` bleibt für eine
+> Übergangsphase als Import- und CLI-Alias verfügbar; neue Integrationen müssen
+> `coma` verwenden.
 
 > Die **Lebenszyklus-Schicht** für Agenten: Wie entsteht ein Agent als eigener
 > Prozess, und wie bleibt man mit ihm in Kontakt, solange er läuft?
 
-Genau eine Verantwortung. COMAS sperrt nichts, verwaltet keine Rechte und hält
+Genau eine Verantwortung. COMA sperrt nichts, verwaltet keine Rechte und hält
 kein Gedächtnis. Es arbeitet mit Dateien und Prozessen — **ohne Konto, ohne Netz,
 ohne Cluster**. Null Abhängigkeiten, nur Standardbibliothek.
 
@@ -11,17 +16,17 @@ Konzept, Begründung und Abgrenzung: [`KONZEPT.md`](KONZEPT.md).
 
 | Schicht | Frage | Zuständig |
 |---|---|---|
-| **Lebenszyklus** | Wie entsteht ein Agent, wie rede ich mit ihm? | **COMAS** |
+| **Lebenszyklus** | Wie entsteht ein Agent, wie rede ich mit ihm? | **COMA** |
 | Anspruch | Wer darf was anfassen? | `team-lock` → `lock-master` → Roshambo |
 | Gedächtnis | Wurde das schon versucht, wie ging es aus? | Roshambo |
 
-Die Verben trennen sauber: COMAS spricht `spawn`, `send`, `poll`, `result`. Ein
+Die Verben trennen sauber: COMA spricht `spawn`, `send`, `poll`, `result`. Ein
 Koordinator spricht `claim`, `release`, `remember`, `recall`, `decide`, `status`.
 Keine Überschneidung.
 
 ## Wozu
 
-**COMAS umgeht keine Sicherheitsgrenze.** Es nutzt dokumentierte CLI-Flags
+**COMA umgeht keine Sicherheitsgrenze.** Es nutzt dokumentierte CLI-Flags
 (`--permission-mode`, `--allowedTools` und Verwandte), um einen Client-Bug zu
 umschiffen, nicht um eine Prüfung zu deaktivieren.
 
@@ -36,12 +41,12 @@ Die Lösung ist nicht, mehr Regeln in eine Allowlist zu schreiben, sondern den
 Agenten **gar nicht erst in der RC-Session leben zu lassen**: ein eigener lokaler
 Prozess ausserhalb dieser Session, Kommunikation über das Dateisystem. Welche
 Werkzeuge dieser Prozess nutzen darf, entscheidet weiterhin der Permission-Mode —
-COMAS setzt ihn nur an einer Stelle, an der er tatsächlich ankommt.
+COMA setzt ihn nur an einer Stelle, an der er tatsächlich ankommt.
 
 ## Schnellstart
 
 ```python
-from comas import JobBoard, JobRunner
+from coma import JobBoard, JobRunner
 
 board = JobBoard(r"C:\Users\du\_agentjobs")
 board.submit("meinjob", "# Auftrag\n\nSchreibe das Ergebnis nach OUT/meinjob.result.md.\n")
@@ -53,10 +58,10 @@ print(result["status"]["state"], result["result_written"])
 Oder von der Kommandozeile:
 
 ```bat
-comas --root C:\Users\du\_agentjobs run meinjob
-comas --root C:\Users\du\_agentjobs run meinjob --dry-run   :: nur zeigen, nichts starten
-comas --root C:\Users\du\_agentjobs status meinjob
-comas --root C:\Users\du\_agentjobs result meinjob
+coma --root C:\Users\du\_agentjobs run meinjob
+coma --root C:\Users\du\_agentjobs run meinjob --dry-run   :: nur zeigen, nichts starten
+coma --root C:\Users\du\_agentjobs status meinjob
+coma --root C:\Users\du\_agentjobs result meinjob
 ```
 
 **`--dry-run` zuerst.** Es baut das vollständige Kommando und zeigt es, ohne dass
@@ -67,10 +72,10 @@ ein Token fließt.
 ```
 IN/    <jobid>.md                       Auftrag (Freitext-Markdown)
 OUT/   <jobid>.result.md                Ergebnis
-       comas.<jobid>.json               Status      — nur der Runner schreibt
-       comas.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
-       comas.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
-       comas.<jobid>.console.log        stdout/stderr des Laufs
+       coma.<jobid>.json               Status      — nur der Runner schreibt
+       coma.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
+       coma.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
+       coma.<jobid>.console.log        stdout/stderr des Laufs
 DONE/  <jobid>.md                       erledigter Auftrag
 ```
 
@@ -93,11 +98,11 @@ Eine RC-Session kann Aufträge schreiben und Ergebnisse abholen, ohne den Agente
 selbst zu hosten:
 
 ```python
-from comas import JobBoard, read_result, wait_for_finish
+from coma import JobBoard, read_result, wait_for_finish
 
 board = JobBoard(root)
 paths = board.submit("meinjob", auftrag_markdown)   # 1. Auftrag schreiben
-# 2. Lokal läuft irgendwann: comas run meinjob
+# 2. Lokal läuft irgendwann: coma run meinjob
 status = wait_for_finish(paths, timeout=3600)        # 3. Statusdatei beobachten
 if status["exit_code"] == 0:
     print(read_result(paths))
@@ -110,7 +115,7 @@ OneDrive von einem anderen Rechner.
 ### Nachrichten während des Laufs
 
 ```python
-from comas import from_agent, to_agent
+from coma import from_agent, to_agent
 
 to_agent(paths).append({"kind": "hint", "text": "Nimm Variante B."})   # Orchestrator
 for record in from_agent(paths).read():                                # Agent-Meldungen
@@ -127,7 +132,7 @@ welche Umgebung sie braucht. Er startet **nichts** — das macht der `Spawner`.
 Deshalb ist der Kommandobau ohne Prozessstart prüfbar.
 
 ```python
-from comas import ClaudeAdapter, Spawner
+from coma import ClaudeAdapter, Spawner
 
 adapter = ClaudeAdapter(model="sonnet", permission_mode="dontAsk",
                         allowed_tools=["Read", "Write"], max_budget_usd=2.0)
@@ -155,7 +160,7 @@ Adapterwissen dokumentiert und getestet, ohne dass ein ungetesteter Aufrufweg
 unbemerkt in einen unbeaufsichtigten Lauf gerät.
 
 ```bat
-comas adapters      :: zeigt Stand, gefundene Binary und die Fallstricke je Adapter
+coma adapters      :: zeigt Stand, gefundene Binary und die Fallstricke je Adapter
 ```
 
 ### Der Permission-Mode bleibt Parameter
@@ -174,8 +179,8 @@ gibt". Fest verdrahtet bekäme ein Konsument stillschweigend das falsche Profil.
 
 **Was `dontAsk` *nicht* zusätzlich verengt (geprüft 2026-07-26, CLI 2.1.220):** Ein
 `Write` auf einen absoluten Pfad **außerhalb** des Arbeitsverzeichnisses wurde
-nicht verweigert — der Selbsttest lief mit cwd im COMAS-Repo und schrieb nach
-OneDrive, Exit 0. Deshalb setzt COMAS kein `cwd` von sich aus; `subprocess` erbt
+nicht verweigert — der Selbsttest lief mit cwd im COMA-Repo und schrieb nach
+OneDrive, Exit 0. Deshalb setzt COMA kein `cwd` von sich aus; `subprocess` erbt
 das des Aufrufers, wie im Bestand. Wer den Arbeitsbereich festlegen will,
 übergibt `cwd=` bzw. `--cwd`.
 
@@ -232,14 +237,14 @@ Ratschläge, sondern Verhalten:
    absoluten `.exe`- bzw. `node`-Aufrufwege.
 2. **Keine eingebetteten Interpreter-Einzeiler in der Startschale** — gleiches
    Quoting-Problem. Der Statusschreiber ist ein eigenes Modul und bleibt als
-   `python -m comas.status` argv-kompatibel zur Vorlage aufrufbar.
-3. **Immer `> log 2>&1`.** Jeder Lauf schreibt `comas.<jobid>.console.log`; der
+   `python -m coma.status` argv-kompatibel zur Vorlage aufrufbar.
+3. **Immer `> log 2>&1`.** Jeder Lauf schreibt `coma.<jobid>.console.log`; der
    `Spawner` leitet stdout und stderr zusammen dorthin und liest danach das Ende
    zurück. Ein stiller Tod darf nicht möglich sein.
 4. **Die Argumentreihenfolge ist eine Sicherheitseigenschaft.** `--tools`,
    `--allowedTools` und `--disallowedTools` sind **variadisch** (`<tools...>`).
    Ein positionaler Prompt hinter einem solchen Flag würde als Werkzeugname
-   verschluckt. COMAS setzt den Prompt darum direkt nach `-p` und verbindet alle
+   verschluckt. COMA setzt den Prompt darum direkt nach `-p` und verbindet alle
    Werkzeuglisten komma-getrennt zu einem Argument.
 
 Ebenfalls erzwungen: `--output-format stream-json` setzt `--verbose` mit. Die CLI
@@ -248,17 +253,17 @@ Option, die zur Laufzeit stirbt.
 
 ## Mitgelieferte Kopien: Manifest **mit Prüfbefehl**
 
-Konsumenten binden COMAS als mitgelieferte Kopie ein und aktualisieren über ein
-Manifest. Ein Manifest, das nur sagt „hier steckt COMAS 0.1 drin", merkt nicht,
+Konsumenten binden COMA als mitgelieferte Kopie ein und aktualisieren über ein
+Manifest. Ein Manifest, das nur sagt „hier steckt COMA 0.1 drin", merkt nicht,
 wenn 0.3 nötig wäre — und schon gar nicht, wenn jemand in die Kopie
 hineingeschrieben hat.
 
 ```bat
 :: Manifest schreiben (kopiert nichts -- das macht der Konsument)
-comas vendor .\comas-vendor.json --path vendor\comas --source C:\_Local_DEV\repos\comas\comas
+coma vendor .\coma-vendor.json --path vendor\coma --source C:\_Local_DEV\repos\coma\coma
 
 :: Prüfen. Exitcode 1 bei Drift -- daran kann ein Hook oder eine CI scheitern.
-comas check .\comas-vendor.json
+coma check .\coma-vendor.json
 ```
 
 Drei Fragen, drei Antworten:
@@ -280,22 +285,22 @@ werden beim Hashen normalisiert, sonst meldete jede Kopie zwischen Windows und
 
 ## Lock-Schnittstelle: definiert, nicht implementiert
 
-COMAS sperrt nichts. Es ruft Claims über eine schmale Schnittstelle auf, nicht
+COMA sperrt nichts. Es ruft Claims über eine schmale Schnittstelle auf, nicht
 gegen ein konkretes Modul — dann ist der späteren Wechsel ein Zeilenwechsel im
 Stack-Manifest statt eines Umbaus:
 
-- `comalock` = COMAS + `lock-master` (lokal, offline)
-- `comaroshambo` = COMAS + Roshambo (verteilt, Cloud)
+- `comalock` = COMA + `lock-master` (lokal, offline)
+- `comaroshambo` = COMA + Roshambo (verteilt, Cloud)
 
 ```python
-from comas import LockBackend, claimed   # LockBackend ist ein Protocol
+from coma import LockBackend, claimed   # LockBackend ist ein Protocol
 
 with claimed(mein_backend, "pfad/zum/projekt", kind="project"):
     JobRunner(board).run("meinjob")
 ```
 
 Es gibt hier **keinen** Import von `lock-master`, `team-lock` oder Roshambo, und
-das ist Absicht, kein fehlender Schritt: COMAS muss abhängigkeitsfrei und
+das ist Absicht, kein fehlender Schritt: COMA muss abhängigkeitsfrei und
 offline-fähig bleiben. Ein Test prüft das nach. Der Standard ist `NullLock` —
 gewährt alles, merkt sich nichts.
 
@@ -329,7 +334,7 @@ Kommandobau gegen erwartete Argumentlisten, nach dem Vorbild von
 
 Drei Grenzen des Moduls sind ebenfalls als Test hinterlegt, damit sie beim
 nächsten Umbau nicht still verloren gehen: kein Import von `llmauto`/`swarm-ai`
-(COMAS ist eine **Extraktion**, keine Abhängigkeit), keine Fremdbibliothek, ein
+(COMA ist eine **Extraktion**, keine Abhängigkeit), keine Fremdbibliothek, ein
 Schreiber je Datei.
 
 ## Herkunft
@@ -343,21 +348,21 @@ unabhängig voneinander `claude`-Subprozessaufrufe:
 | `swarm-ai/tools/runner.py:16-226` | `--max-budget-usd`, `--tools`, `--disallowedTools mcp__*`, `--no-session-persistence`, Validierung, Parallellauf |
 | `swarm-ai/experiments/dungeon/…_live.py:283-323` | `--output-format stream-json`, `--verbose`, `--safe-mode`, `CLAUDECODE`-Bereinigung |
 | `_control-center/START-LOCAL-AGENT.bat:72` | Standardkonfiguration und Zeiger-Prompt |
-| `_control-center/_agentjobs/comas_status.py` | Statusschreiber |
+| `_control-center/_agentjobs/coma_status.py` | Statusschreiber |
 
 Nicht Teil des Moduls und absichtlich lokal: `_control-center/_agentjobs/` und
 `START-LOCAL-AGENT.bat`. Die Startschale ist die Umgehung eines Client-Bugs, keine
 allgemeine Fähigkeit.
 
-`ellmos-agent-bridge` ist **kein** Konkurrent und kein künftiger COMAS-Importeur:
+`ellmos-agent-bridge` ist **kein** Konkurrent und kein künftiger COMA-Importeur:
 Es verwaltet Partner-Metadaten und trifft Empfehlungen, startet aber nichts.
 
 ## Stand
 
-Version 0.1.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMAS startet
+Version 0.1.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMA startet
 lokale Prozesse und schreibt Dateien, hat also keine Netzfläche; eine Copyleft-Klausel
 mit Netzauslöser wie AGPL §13 würde hier nie greifen). Das öffentliche Quellrepository
-ist `https://github.com/dev-bricks/comas`; der `.MODULES`-Eintrag bleibt ein
+ist `https://github.com/dev-bricks/coma`; der `.MODULES`-Eintrag bleibt ein
 Plan-D-Pointer auf die lokalen Klone und dieses Repository. Die zentrale Registry
-`comas-reg.json` und weitere Produkt-/Release-Gates bleiben davon getrennte offene
+`coma-reg.json` und weitere Produkt-/Release-Gates bleiben davon getrennte offene
 Punkte.

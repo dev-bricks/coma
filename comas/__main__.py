@@ -1,5 +1,5 @@
-"""``python -m comas`` — dasselbe wie der Befehl ``comas``."""
-from .cli import main
+"""Compatibility entry point for ``python -m comas``."""
+from coma.cli import main
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+
+raise SystemExit(main())

@@ -1,17 +1,17 @@
 {
   "schema": "ellmos.module.v2",
-  "id": "comas",
-  "display_name": "COMAS",
+  "id": "coma",
+  "display_name": "COMA",
   "version": "0.1.0",
   "category": "orchestration",
   "kind": "runtime",
   "status": "development",
   "visibility": "public",
-  "description": "Provider-unabhaengige Orchestrierungs- und Lebenszyklus-Schicht fuer Agentenprozesse. Spawn-Schicht mit verifizierten CLI-Adaptern fuer Claude, Codex und Agy sowie fail-closed Kimi-Geruest, Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. COMAS ist kein Scheduler, sperrt nichts, verwaltet keine Rechte und haelt kein Gedaechtnis.",
-  "package": "comas",
+  "description": "Provider-unabhaengige Orchestrierungs- und Lebenszyklus-Schicht fuer Agentenprozesse. Spawn-Schicht mit verifizierten CLI-Adaptern fuer Claude, Codex und Agy sowie fail-closed Kimi-Geruest, Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. COMA ist kein Scheduler, sperrt nichts, verwaltet keine Rechte und haelt kein Gedaechtnis.",
+  "package": "coma",
   "entrypoints": {
-    "cli": "python -m comas",
-    "python": "comas.JobRunner"
+    "cli": "python -m coma",
+    "python": "coma.JobRunner"
   },
   "provides": [
     "runtime.agent-spawn",
@@ -45,7 +45,7 @@
   "source_of_truth": {
     "type": "local-directory",
     "path": ".",
-    "repository": "https://github.com/dev-bricks/comas"
+    "repository": "https://github.com/dev-bricks/coma"
   },
   "adapters": [
     {

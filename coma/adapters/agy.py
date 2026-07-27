@@ -1,6 +1,6 @@
 """Adapter für Gemini/Antigravity (``agy``), live geprüft.
 
-``verified = False``: :class:`comas.spawn.Spawner` startet diesen Adapter nur mit
+``verified = False``: :class:`coma.spawn.Spawner` startet diesen Adapter nur mit
 ausdruecklichem ``allow_unverified=True``.
 
 Quelle der Aufrufkonvention: ``~/CLAUDE.md``, Abschnitt „Gemini (antigravity)".
@@ -9,7 +9,7 @@ Dort empirisch belegt, hier nur abgeleitet — vor scharfer Nutzung dort nachles
 Die harten Punkte:
 
 1. **``agy -p`` liefert wieder stdout.** Live-Probe am 2026-07-27 mit agy 1.1.7:
-   Exit 0 und ``COMAS_AGY_OK`` auf stdout. COMAS nutzt für Jobläufe trotzdem
+   Exit 0 und ``COMA_AGY_OK`` auf stdout. COMA nutzt für Jobläufe trotzdem
    weiterhin die Ergebnisdatei als dauerhaften Protokollkanal.
 2. **Berechtigung und Workspace sind zwei verschiedene Dinge.**
    ``--dangerously-skip-permissions`` hebt nur die Tool-Freigabe auf und
@@ -58,7 +58,7 @@ class AgyAdapter(CliAdapter):
     verified = True
     notes = (
         "Live geprüft mit agy 1.1.7 am 2026-07-27 (stdout und Exit 0).",
-        "Ergebnisdatei bleibt für dauerhafte COMAS-Jobs der kanonische Kanal.",
+        "Ergebnisdatei bleibt für dauerhafte COMA-Jobs der kanonische Kanal.",
         "--add-dir bestimmt den Workspace; die Permission-Flag tut das NICHT.",
         "Nur agy.exe, keine agy.cmd; aus Subprozessen absoluten Pfad nutzen.",
         "companion-for-agy verstuemmelt CJK — nur fuer kurze ASCII-Antworten.",
@@ -90,7 +90,7 @@ class AgyAdapter(CliAdapter):
         """
         if result_file is None:
             raise AdapterError(
-                "COMAS-Jobs mit agy brauchen eine result_file als dauerhaften "
+                "COMA-Jobs mit agy brauchen eine result_file als dauerhaften "
                 "Ergebniskanal"
             )
         return POINTER_PROMPT.format(job_file=job_file, result_file=result_file)

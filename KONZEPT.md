@@ -1,32 +1,32 @@
-# COMAS — COMmunication for Autonomous Subagents
+# COMA — COMmunication for Autonomous Subagents
 
 > Modul-Konzept. Beschlossen von Lukas Geiger am 2026-07-26, erarbeitet in Session
-> „OPUS WORKSTATION". Status: **Modul gebaut** (`comas` 0.1.0, 2026-07-26) — die
+> „OPUS WORKSTATION". Status: **Modul gebaut** (`coma` 0.1.0, 2026-07-26) — die
 > Spawn-Schicht ist aus den drei bestehenden Implementierungen extrahiert, 227 Tests
 > laufen ohne Prozessstart, ein echter Durchlauf über die Python-Schicht ist belegt.
 > Referenzimplementierung (`.bat`) existiert weiter und bleibt lokal.
 > Siehe `README.md`, „Offen" unten und den Ergebnisbericht
 > `_agentjobs/OUT/coma-modul-bauen.result.md`.
 
-## Was COMAS ist
+## Was COMA ist
 
 Die **Lebenszyklus-Schicht** für Agenten: Wie entsteht ein Agent als eigener Prozess,
 und wie bleibt man mit ihm in Kontakt, solange er läuft?
 
-Genau eine Verantwortung. COMAS sperrt nichts, verwaltet keine Rechte und hält kein
+Genau eine Verantwortung. COMA sperrt nichts, verwaltet keine Rechte und hält kein
 Gedächtnis.
 
 | Schicht | Frage | Zuständig |
 |---|---|---|
-| **Lebenszyklus** | Wie entsteht ein Agent, wie rede ich mit ihm? | **COMAS** |
+| **Lebenszyklus** | Wie entsteht ein Agent, wie rede ich mit ihm? | **COMA** |
 | Anspruch | Wer darf was anfassen? | `team-lock` → `lock-master` → Roshambo |
 | Gedächtnis | Wurde das schon versucht, wie ging es aus? | Roshambo |
 
-Die Verben trennen sauber: COMAS spricht `spawn`, `send`, `poll`, `result`.
+Die Verben trennen sauber: COMA spricht `spawn`, `send`, `poll`, `result`.
 Roshambo-MCP spricht `claim`, `release`, `remember`, `recall`, `decide`, `status`.
 Keine Überschneidung — hätten zwei Systeme dieselbe Aufgabe, überlappte ihr Vokabular.
 
-## Warum es COMAS braucht — der belegte Anlass
+## Warum es COMA braucht — der belegte Anlass
 
 In einer **Remote-Control-Session** reicht Claude Code `--dangerously-skip-permissions`
 nicht an den Remote-Client durch. Belegt durch die offenen Issues
@@ -47,37 +47,37 @@ gestartet — Exit 0, keine einzige Berechtigungsabfrage. Danach ein echter Auft
 
 ## Warum eigenes Modul
 
-- **llmauto** würde COMAS importieren (es ist heute claude-only; die Multi-CLI-Fähigkeit
-  kommt aus COMAS).
-- **swarm-ai** würde COMAS importieren (spawnt heute selbst per `subprocess`).
-- **Roshambo** würde COMAS importieren — es koordiniert Agenten, erzeugt aber keine.
+- **llmauto** würde COMA importieren (es ist heute claude-only; die Multi-CLI-Fähigkeit
+  kommt aus COMA).
+- **swarm-ai** würde COMA importieren (spawnt heute selbst per `subprocess`).
+- **Roshambo** würde COMA importieren — es koordiniert Agenten, erzeugt aber keine.
 
-Drei Konsumenten aus drei Richtungen. Läge COMAS in einem davon, müssten die anderen
+Drei Konsumenten aus drei Richtungen. Läge COMA in einem davon, müssten die anderen
 zwei davon abhängen.
 
 ## Der entscheidende Trennungsgrund: Offline
 
-Roshambo hängt an CockroachDB Cloud und AWS Bedrock. COMAS arbeitet mit Dateien und
+Roshambo hängt an CockroachDB Cloud und AWS Bedrock. COMA arbeitet mit Dateien und
 Prozessen — **ohne Konto, ohne Netz, ohne Cluster**.
 
 Fällt die Cloud aus, muss der lokale Agentenbetrieb weiterlaufen. Ein Koordinator,
 dessen Prozess-Substrat am selben Netz hängt wie er selbst, hat keinen Rückfallweg.
-COMAS ist deshalb das Substrat, auf dem Roshambo aufsetzt — nicht sein Konkurrent.
+COMA ist deshalb das Substrat, auf dem Roshambo aufsetzt — nicht sein Konkurrent.
 
 **`ellmos-agent-bridge` ist ebenfalls kein Konkurrent und kein künftiger
-COMAS-Importeur** — es verwaltet Partner-Metadaten (Fähigkeiten, Kosten,
+COMA-Importeur** — es verwaltet Partner-Metadaten (Fähigkeiten, Kosten,
 Erreichbarkeit, Konfigurationsdateien) und trifft Empfehlungen, startet aber
 nichts: im ganzen Paket kein einziger `subprocess`-Aufruf. Belegt in
 `_agentjobs/OUT/coma-agentbridge-grenze.result.md`. Entsteht später eine Kopplung,
-ist die einzig saubere Richtung agent-bridge → COMAS, nie umgekehrt.
+ist die einzig saubere Richtung agent-bridge → COMA, nie umgekehrt.
 
 ## Grenze: was Modul ist und was lokal bleibt
 
 Damit das Modul nicht mit einer Maschine verwachsen geboren wird:
 
 **Modul (allgemein, veröffentlichbar):**
-- Das COMAS-Protokoll (Verzeichnis- und Dateikonvention, siehe unten)
-- Der Statusschreiber (`comas_status.py`)
+- Das COMA-Protokoll (Verzeichnis- und Dateikonvention, siehe unten)
+- Der Statusschreiber (`coma_status.py`)
 - Die Spawn-Schicht mit **CLI-Adaptern**: claude, codex, agy, kimi — der Unterschied
   zwischen ihnen ist ein Kommando-Template plus Flags. Diese Adapter werden **aus
   bestehendem Code extrahiert** (`llmauto/core/runner.py`, `swarm-ai/tools/runner.py`,
@@ -97,10 +97,10 @@ ins Modul.
 ```
 IN/    <jobid>.md                       Auftrag (Freitext-Markdown)
 OUT/   <jobid>.result.md                Ergebnis
-       comas.<jobid>.json               Status      — nur der Runner schreibt
-       comas.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
-       comas.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
-       comas.<jobid>.console.log        stdout/stderr des Laufs
+       coma.<jobid>.json               Status      — nur der Runner schreibt
+       coma.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
+       coma.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
+       coma.<jobid>.console.log        stdout/stderr des Laufs
 DONE/  <jobid>.md                       erledigter Auftrag
 ```
 
@@ -112,7 +112,7 @@ Eine geteilte Logdatei in OneDrive hat schon einmal zu Konfliktkopien geführt
 `.jsonl` für die Kanäle, weil Anhängen atomar ist — ein Schreiber muss nicht erst
 lesen, parsen und neu schreiben.
 
-Bei mehreren Subagenten kommt eine zentrale Registry dazu (`comas-reg.json`, nur der
+Bei mehreren Subagenten kommt eine zentrale Registry dazu (`coma-reg.json`, nur der
 Operator schreibt) plus je Agent ein eigenes Status-JSON — das Muster aus
 `swarm-ai/experiments/dungeon/elephant_path_treasure_hunt_live.py` (`live_<id>.json`
 je Agent + `experiment_live.json` zentral).
@@ -144,12 +144,12 @@ das geerbte Environment gemessen.
 
 ## Gegen eine Schnittstelle programmieren, nicht gegen lock-master
 
-COMAS ruft Claims über eine schmale Schnittstelle (`claim` / `release` / `status`) auf,
+COMA ruft Claims über eine schmale Schnittstelle (`claim` / `release` / `status`) auf,
 nicht gegen ein konkretes Modul. Dann ist der spätere Wechsel ein Zeilenwechsel im
 Stack-Manifest statt eines Umbaus:
 
-- `comalock` = COMAS + lock-master (lokal, offline)
-- `comaroshambo` = COMAS + Roshambo (verteilt, Cloud)
+- `comalock` = COMA + lock-master (lokal, offline)
+- `comaroshambo` = COMA + Roshambo (verteilt, Cloud)
 
 ## Herkunft
 
@@ -185,11 +185,11 @@ Nachrichten") — der Zustellweg ist dort konzeptionell vorgesehen, Status heute
 
 ## Offen
 
-Stand 2026-07-26, nach dem Bau des Moduls (`comas` 0.1.0, Ergebnisbericht:
+Stand 2026-07-26, nach dem Bau des Moduls (`coma` 0.1.0, Ergebnisbericht:
 `_agentjobs/OUT/coma-modul-bauen.result.md`).
 
 - [x] `ellmos-module.v2.json` — liegt vor, mit Adapter-Abschnitt und Stand je Adapter
-- [x] Lock-Schnittstelle definieren — `comas/locks.py`: `LockBackend` (Protocol
+- [x] Lock-Schnittstelle definieren — `coma/locks.py`: `LockBackend` (Protocol
       mit `claim`/`release`/`status`), `NullLock`, Kontextmanager `claimed()`.
       **Nur definiert**, nicht implementiert; kein Import von `lock-master`,
       `team-lock` oder Roshambo (per Test abgesichert)
@@ -198,22 +198,22 @@ Stand 2026-07-26, nach dem Bau des Moduls (`comas` 0.1.0, Ergebnisbericht:
       dokumentierten Fallstricken. **Nicht live geprüft** (`verified = False`);
       der Spawner verweigert sie ohne ausdrückliches `allow_unverified=True`.
       Offen bleibt je Adapter ein echter Durchlauf
-- [ ] Zentrale Registry `comas-reg.json` für Mehr-Agenten-Betrieb — nicht gebaut.
+- [ ] Zentrale Registry `coma-reg.json` für Mehr-Agenten-Betrieb — nicht gebaut.
       Der Spawner kann bereits nebenläufig starten (`run_many`, `ProcessHandle`,
       `wait_all`), aber es gibt kein zentrales Verzeichnis über mehrere Agenten
 - [x] Entscheidung: öffentlich (Sichtbarkeit `public`) — MIT-Lizenz gesetzt am
-      2026-07-26. Begründung: COMAS startet lokale Prozesse und schreibt
+      2026-07-26. Begründung: COMA startet lokale Prozesse und schreibt
       Dateien, hat keine Netzfläche; eine netzauslösende Copyleft-Klausel wie
       AGPL §13 würde hier nie greifen. Details:
       `_agentjobs/OUT/coma-lizenz-und-metarepo.result.md`. **Tatsächliche
       Veröffentlichung (Push, OneDrive-Spiegelung, Katalog-Eintrag) steht
       weiterhin aus** — bewusst nicht Teil dieses Laufs
-- [ ] `llmauto` und `swarm-ai` auf COMAS umhängen — ausdrücklich **nicht** Teil
+- [ ] `llmauto` und `swarm-ai` auf COMA umhängen — ausdrücklich **nicht** Teil
       des Bau-Auftrags; eigener, späterer Schritt. Beide bauen heute weiterhin
       ihre eigenen `claude`-Aufrufe
 - [ ] Plan-D-Deploy: Quellkopie nach `.CONTROL/coma/` in OneDrive — kommt separat,
       jetzt, da das Modul steht
 - [ ] Widerspruch in der Referenzimplementierung: `_agentjobs/README.md:25`
       dokumentiert `OUT/<jobid>.status` mit Inhalt `"running" -> "done <exitcode>"`.
-      Real geschrieben wird `OUT/comas.<jobid>.json`. Das Modul folgt der `.bat`
+      Real geschrieben wird `OUT/coma.<jobid>.json`. Das Modul folgt der `.bat`
       und diesem Konzept; die README ist zu korrigieren

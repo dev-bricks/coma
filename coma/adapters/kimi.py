@@ -1,6 +1,6 @@
 """Adaptergeruest fuer Kimi Code CLI — **nicht live geprueft.**
 
-``verified = False``: :class:`comas.spawn.Spawner` startet diesen Adapter nur mit
+``verified = False``: :class:`coma.spawn.Spawner` startet diesen Adapter nur mit
 ausdruecklichem ``allow_unverified=True``.
 
 Quelle der Aufrufkonvention: ``~/CLAUDE.md``, Abschnitt „Kimi (Kimi Code CLI)"
@@ -96,7 +96,7 @@ class KimiAdapter(CliAdapter):
 
     def pointer_prompt(self, job_file: Any, result_file: Any = None) -> str:
         if result_file is None:
-            raise AdapterError("Kimi braucht im COMAS-Protokoll eine result_file")
+            raise AdapterError("Kimi braucht im COMA-Protokoll eine result_file")
         return POINTER_PROMPT.format(job_file=job_file, result_file=result_file)
 
     def build_cmd(self, prompt: str, **overrides: Any) -> list[str]:

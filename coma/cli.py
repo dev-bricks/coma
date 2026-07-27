@@ -1,6 +1,6 @@
-"""Kommandozeile: ``comas`` bzw. ``python -m comas``.
+"""Kommandozeile: ``coma`` bzw. ``python -m coma``.
 
-Der Ersatz fuer ``START-LOCAL-AGENT.bat`` ist ``comas run``. Alles andere sind
+Der Ersatz fuer ``START-LOCAL-AGENT.bat`` ist ``coma run``. Alles andere sind
 Lese- und Pruefbefehle fuer Orchestratoren.
 
 ``--dry-run`` baut das Kommando und zeigt es, ohne etwas zu starten — damit laesst
@@ -192,12 +192,12 @@ def _add_adapter_options(parser: argparse.ArgumentParser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="comas",
+        prog="coma",
         description=(
-            "COMAS — Lebenszyklus-Schicht fuer Agenten: starten, beobachten, abholen."
+            "COMA — Lebenszyklus-Schicht fuer Agenten: starten, beobachten, abholen."
         ),
     )
-    parser.add_argument("--version", action="version", version=f"comas {__version__}")
+    parser.add_argument("--version", action="version", version=f"coma {__version__}")
     parser.add_argument(
         "--root", default=".",
         help="Jobverzeichnis mit IN/ OUT/ DONE/ (Standard: aktuelles Verzeichnis)",
@@ -250,14 +250,14 @@ def build_parser() -> argparse.ArgumentParser:
         "manifest", nargs="?",
         help=f"Manifestdatei; ohne Angabe wird unter --root nach {MANIFEST_FILENAME} gesucht",
     )
-    check.add_argument("--source", help="Quellverzeichnis des comas-Pakets")
+    check.add_argument("--source", help="Quellverzeichnis des coma-Pakets")
 
     vendor_cmd = subparsers.add_parser("vendor", help="Manifest fuer eine Kopie schreiben")
     vendor_cmd.add_argument("manifest", help="Zielpfad der Manifestdatei")
     vendor_cmd.add_argument(
         "--path", required=True, help="Pfad der Kopie, relativ zur Manifestdatei"
     )
-    vendor_cmd.add_argument("--source", help="Quellverzeichnis des comas-Pakets")
+    vendor_cmd.add_argument("--source", help="Quellverzeichnis des coma-Pakets")
     vendor_cmd.add_argument("--module-version", help="Version, sonst aus der Quelle")
 
     return parser
@@ -443,7 +443,7 @@ def _cmd_vendor(args: argparse.Namespace) -> int:
         args,
         manifest,
         f"Manifest geschrieben: {args.manifest}\n"
-        f"COMAS {manifest['version']}, {len(manifest['files'])} Datei(en), "
+        f"COMA {manifest['version']}, {len(manifest['files'])} Datei(en), "
         f"Kopie erwartet unter {manifest['path']}",
     )
     return 0
@@ -471,10 +471,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _COMMANDS[args.command](args)
     except (AdapterError, ProtocolError, ManifestError) as error:
-        print(f"[comas] {error}", file=sys.stderr)
+        print(f"[coma] {error}", file=sys.stderr)
         return 2
     except OSError as error:
-        print(f"[comas] Dateifehler: {error}", file=sys.stderr)
+        print(f"[coma] Dateifehler: {error}", file=sys.stderr)
         return 2
 
 

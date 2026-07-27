@@ -5,15 +5,15 @@ Bei der CLI wird vor allem eines geprueft: ``--dry-run`` und ``cmd`` starten
 nichts. Das ist der Befehl, mit dem man vor einem teuren Lauf nachsieht.
 
 Bei den Locks wird geprueft, dass die Schnittstelle **passt** — nicht, dass sie
-sperrt. COMAS sperrt nichts.
+sperrt. COMA sperrt nichts.
 """
 import json
 
 import pytest
 
-from comas import LockBackend, LockDenied, NullLock, claimed
-from comas.cli import main
-from comas.manifest import MANIFEST_FILENAME
+from coma import LockBackend, LockDenied, NullLock, claimed
+from coma.cli import main
+from coma.manifest import MANIFEST_FILENAME
 
 
 def run_cli(argv, capsys):
@@ -26,8 +26,8 @@ class TestDryRun:
         def forbidden(*args, **kwargs):  # pragma: no cover - darf nicht passieren
             raise AssertionError("--dry-run darf nichts starten")
 
-        monkeypatch.setattr("comas.spawn.subprocess.run", forbidden)
-        monkeypatch.setattr("comas.spawn.subprocess.Popen", forbidden)
+        monkeypatch.setattr("coma.spawn.subprocess.run", forbidden)
+        monkeypatch.setattr("coma.spawn.subprocess.Popen", forbidden)
         code, out = run_cli(
             ["--root", str(board.root), "run", "testjob", "--dry-run"], capsys
         )
@@ -236,20 +236,20 @@ class TestCheckCommand:
     def test_exit_code_one_on_drift(self, tmp_path, capsys):
         import shutil
 
-        source = tmp_path / "quelle" / "comas"
+        source = tmp_path / "quelle" / "coma"
         (source / "adapters").mkdir(parents=True)
         (source / "__init__.py").write_text('__version__ = "0.1.0"\n', encoding="utf-8")
         (source / "spawn.py").write_text("a = 1\n", encoding="utf-8")
         consumer = tmp_path / "konsument"
         consumer.mkdir()
-        shutil.copytree(source, consumer / "vendor" / "comas")
+        shutil.copytree(source, consumer / "vendor" / "coma")
 
         code, out = run_cli(
             [
                 "vendor",
                 str(consumer / MANIFEST_FILENAME),
                 "--path",
-                "vendor/comas",
+                "vendor/coma",
                 "--source",
                 str(source),
             ],
@@ -261,7 +261,7 @@ class TestCheckCommand:
         assert code == 0 and "Kein Drift" in out
 
         # Kopie anfassen -> Exitcode 1. Genau das kann ein Bericht nicht.
-        (consumer / "vendor" / "comas" / "spawn.py").write_text("a = 2\n", encoding="utf-8")
+        (consumer / "vendor" / "coma" / "spawn.py").write_text("a = 2\n", encoding="utf-8")
         code, out = run_cli(["check", str(consumer / MANIFEST_FILENAME)], capsys)
         assert code == 1
         assert "MODIFIED" in out
@@ -357,13 +357,13 @@ class TestLockInterface:
         with claimed(Never(), "x", required=False) as granted:
             assert granted is False
 
-    def test_comas_itself_never_locks(self):
+    def test_coma_itself_never_locks(self):
         """Keine Datei des Moduls darf ein Lock-Modul importieren."""
-        import comas
+        import coma
         from pathlib import Path
 
         forbidden = ("lock_master", "lock-master", "team_lock", "roshambo")
-        for path in Path(comas.__file__).parent.rglob("*.py"):
+        for path in Path(coma.__file__).parent.rglob("*.py"):
             text = path.read_text(encoding="utf-8").lower()
             for name in forbidden:
                 assert f"import {name}" not in text, f"{path.name} importiert {name}"

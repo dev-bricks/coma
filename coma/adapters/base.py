@@ -2,7 +2,7 @@
 
 Ein Adapter weiss genau zwei Dinge: wie das Kommando fuer seine CLI aussieht und
 welche Umgebung sie braucht. Er startet **nichts** — das Starten macht
-:class:`comas.spawn.Spawner`. Diese Trennung ist der Grund, warum der
+:class:`coma.spawn.Spawner`. Diese Trennung ist der Grund, warum der
 Kommandobau ohne echten Prozessstart pruefbar ist.
 
 Herkunft: extrahiert aus ``llmauto/core/runner.py`` (``_build_env`` Z. 27-32,
@@ -76,7 +76,7 @@ class CliAdapter:
 
     Unterklassen setzen ``name``, ``verified`` und implementieren ``build_cmd``.
 
-    ``verified`` ist keine Kosmetik: :class:`comas.spawn.Spawner` weigert sich,
+    ``verified`` ist keine Kosmetik: :class:`coma.spawn.Spawner` weigert sich,
     einen unverifizierten Adapter zu starten, solange der Aufrufer nicht
     ausdruecklich ``allow_unverified=True`` setzt. So kann Adapterwissen
     dokumentiert und getestet werden, ohne dass ein ungetesteter Aufrufweg
@@ -87,7 +87,7 @@ class CliAdapter:
     display_name: str = ""
     executable: str = ""
     verified: bool = False
-    #: Merkposten, die ``comas adapters`` ausgibt — Fallstricke, Belegstellen.
+    #: Merkposten, die ``coma adapters`` ausgibt — Fallstricke, Belegstellen.
     notes: tuple[str, ...] = ()
     #: Umgebungsvariablen, die vor dem Start entfernt werden.
     env_remove: tuple[str, ...] = ("CLAUDECODE",)
@@ -176,7 +176,7 @@ class CliAdapter:
     # ------------------------------------------------------------------ Anzeige
 
     def describe(self) -> dict[str, Any]:
-        """Selbstauskunft fuer ``comas adapters``."""
+        """Selbstauskunft fuer ``coma adapters``."""
         return {
             "name": self.name,
             "display_name": self.display_name or self.name,
@@ -204,6 +204,6 @@ def join_tools(tools: Sequence[str]) -> str:
     Der Bestand ist an dieser Stelle uneinheitlich: ``llmauto`` verbindet mit
     Komma (``runner.py:46``), ``swarm-ai`` uebergibt Einzelargumente
     (``runner.py:86``), das Dungeon-Skript beides nebeneinander (Z. 296-297).
-    COMAS entscheidet sich fuer die Komma-Form.
+    COMA entscheidet sich fuer die Komma-Form.
     """
     return ",".join(tools)

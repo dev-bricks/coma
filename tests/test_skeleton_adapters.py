@@ -7,8 +7,8 @@ Sicherung greift, die sie von einem unbeaufsichtigten Lauf trennt.
 """
 import pytest
 
-from comas import Spawner, UnverifiedAdapterError
-from comas.adapters import (
+from coma import Spawner, UnverifiedAdapterError
+from coma.adapters import (
     AdapterError,
     AgyAdapter,
     ClaudeAdapter,
@@ -55,13 +55,13 @@ class TestSpawnerGuard:
     def test_explicit_opt_in_lets_the_call_through(self, cls, monkeypatch, fake_run):
         # subprocess wird ersetzt: agy.exe existiert auf diesem Rechner wirklich,
         # und diese Adapter sollen laut Auftrag NICHT live laufen.
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         result = Spawner(cls(), allow_unverified=True).run("Hallo")
         assert result["returncode"] == 0
         assert result["adapter"] == cls.name
 
     def test_claude_needs_no_opt_in(self, monkeypatch, fake_run):
-        monkeypatch.setattr("comas.spawn.subprocess.run", fake_run(returncode=0))
+        monkeypatch.setattr("coma.spawn.subprocess.run", fake_run(returncode=0))
         assert Spawner(ClaudeAdapter()).run("Hallo")["success"] is True
 
 
