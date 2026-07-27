@@ -15,6 +15,8 @@ from coma.manifest import (
     KIND_MISSING,
     KIND_MODIFIED,
     KIND_OUTDATED,
+    LEGACY_MANIFEST_FILENAME,
+    LEGACY_SCHEMA,
     MANIFEST_FILENAME,
     SCHEMA,
     ManifestError,
@@ -25,6 +27,7 @@ from coma.manifest import (
     find_manifests,
     iter_module_files,
     package_dir,
+    read_manifest,
     read_version,
     vendor,
     version_key,
@@ -132,6 +135,21 @@ class TestBuildAndRead:
         path.write_text(json.dumps({"schema": "fremd", "files": {}}), encoding="utf-8")
         with pytest.raises(ManifestError, match="Schema"):
             check_manifest(path)
+
+    def test_legacy_comas_manifest_remains_readable_and_discoverable(self, tmp_path):
+        path = tmp_path / LEGACY_MANIFEST_FILENAME
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": LEGACY_SCHEMA,
+                    "files": {},
+                    "path": "vendor/comas",
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert read_manifest(path)["schema"] == LEGACY_SCHEMA
+        assert path in find_manifests(tmp_path)
 
     def test_missing_manifest_is_reported(self, tmp_path):
         with pytest.raises(ManifestError, match="nicht gefunden"):

@@ -43,9 +43,11 @@ from typing import Any
 from .status import now, write_json
 
 SCHEMA = "coma.vendor.v1"
+LEGACY_SCHEMA = "comas.vendor.v1"
 MODULE_NAME = "coma"
 #: Uebliche Dateiname der Manifestdatei im Konsumentenprojekt.
 MANIFEST_FILENAME = "coma-vendor.json"
+LEGACY_MANIFEST_FILENAME = "comas-vendor.json"
 
 _VERSION_RE = re.compile(r"""^__version__\s*=\s*["']([^"']+)["']""", re.MULTILINE)
 _SKIP_DIRS = {"__pycache__", ".pytest_cache", ".git"}
@@ -164,9 +166,10 @@ def read_manifest(manifest_file: str | os.PathLike[str]) -> dict[str, Any]:
         raise ManifestError(f"Manifest ist kein gueltiges JSON: {path} ({error})") from error
     if not isinstance(data, dict):
         raise ManifestError(f"Manifest ist kein Objekt: {path}")
-    if data.get("schema") != SCHEMA:
+    if data.get("schema") not in (SCHEMA, LEGACY_SCHEMA):
         raise ManifestError(
-            f"unbekanntes Schema {data.get('schema')!r} in {path} — erwartet {SCHEMA!r}"
+            f"unbekanntes Schema {data.get('schema')!r} in {path} — "
+            f"erwartet {SCHEMA!r} oder Legacy {LEGACY_SCHEMA!r}"
         )
     if not isinstance(data.get("files"), dict):
         raise ManifestError(f"Manifest ohne 'files'-Abschnitt: {path}")
@@ -397,7 +400,8 @@ def find_manifests(root: str | os.PathLike[str]) -> list[Path]:
     base = Path(root)
     return sorted(
         path
-        for path in base.rglob(MANIFEST_FILENAME)
+        for name in (MANIFEST_FILENAME, LEGACY_MANIFEST_FILENAME)
+        for path in base.rglob(name)
         if not any(part in _SKIP_DIRS for part in path.parts)
     )
 
