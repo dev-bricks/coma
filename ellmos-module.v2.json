@@ -4,7 +4,7 @@
   "display_name": "COMAS",
   "version": "0.1.0",
   "category": "orchestration",
-  "kind": "library",
+  "kind": "runtime",
   "status": "development",
   "visibility": "public",
   "description": "Provider-unabhaengige Orchestrierungs- und Lebenszyklus-Schicht fuer Agentenprozesse. Spawn-Schicht mit verifizierten CLI-Adaptern fuer Claude, Codex und Agy sowie fail-closed Kimi-Geruest, Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. COMAS ist kein Scheduler, sperrt nichts, verwaltet keine Rechte und haelt kein Gedaechtnis.",
