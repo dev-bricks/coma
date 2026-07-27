@@ -356,7 +356,8 @@ Es verwaltet Partner-Metadaten und trifft Empfehlungen, startet aber nichts.
 
 Version 0.1.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMAS startet
 lokale Prozesse und schreibt Dateien, hat also keine Netzfläche; eine Copyleft-Klausel
-mit Netzauslöser wie AGPL §13 würde hier nie greifen). Damit ist das Modul auf
-Sichtbarkeit `public` vorbereitet — noch **nicht** veröffentlicht, siehe
-[`KONZEPT.md`](KONZEPT.md), Abschnitt „Offen", für die zentrale Registry
-`comas-reg.json` und den offenen Rest bis zum tatsächlichen Push.
+mit Netzauslöser wie AGPL §13 würde hier nie greifen). Das öffentliche Quellrepository
+ist `https://github.com/dev-bricks/comas`; der `.MODULES`-Eintrag bleibt ein
+Plan-D-Pointer auf die lokalen Klone und dieses Repository. Die zentrale Registry
+`comas-reg.json` und weitere Produkt-/Release-Gates bleiben davon getrennte offene
+Punkte.
