@@ -28,16 +28,22 @@ from typing import Any, Sequence
 
 from .base import AdapterError, CliAdapter
 
-#: Absoluter Pfad aus ``~/CLAUDE.md`` — nicht im PATH.
-DEFAULT_EXECUTABLE = str(
-    Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
-    / "Programs"
+#: NPM-Installation auf Windows: Node direkt aufrufen, nicht den CMD-Shim.
+DEFAULT_ENTRYPOINT = (
+    Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
+    / "npm"
+    / "node_modules"
+    / "@moonshot-ai"
     / "kimi-code"
-    / "kimi-code.exe"
+    / "dist"
+    / "main.mjs"
 )
 KNOWN_OUTPUT_FORMATS: tuple[str, ...] = ("text", "stream-json")
 
-POINTER_PROMPT = "Lies die Datei {job_file} und arbeite sie vollstaendig ab."
+POINTER_PROMPT = (
+    "Lies die Datei {job_file} und arbeite sie vollständig ab. "
+    "Schreibe das Ergebnis als UTF-8 nach {result_file}."
+)
 
 
 class KimiAdapter(CliAdapter):
@@ -45,19 +51,20 @@ class KimiAdapter(CliAdapter):
 
     name = "kimi"
     display_name = "Kimi Code CLI"
-    executable = DEFAULT_EXECUTABLE
+    executable = "node" if os.name == "nt" else "kimi"
     verified = False
     notes = (
         "GERUEST: Kommandobau getestet, Aufrufweg nicht live geprueft.",
         "-p ist nicht mit -y/--yolo oder --auto kombinierbar.",
         "Aus dem Zielprojekt heraus aufrufen (cwd = Workspace).",
-        "Binary nicht im PATH; npm-Shim kimi.CMD meiden (cmd.exe-Reparsing).",
+        "Windows: Node-Entrypoint direkt; npm-Shim kimi.CMD wird nicht reparst.",
     )
 
     def __init__(
         self,
         model: str | None = None,
         *,
+        entrypoint: str | Path | None = None,
         output_format: str | None = None,
         session: str | None = None,
         continue_conversation: bool = False,
@@ -65,6 +72,11 @@ class KimiAdapter(CliAdapter):
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
+        self.entrypoint = (
+            Path(entrypoint)
+            if entrypoint is not None
+            else (DEFAULT_ENTRYPOINT if os.name == "nt" else None)
+        )
         self.model = model
         self.output_format = self._check_output_format(output_format)
         self.session = session
@@ -82,8 +94,10 @@ class KimiAdapter(CliAdapter):
             )
         return value
 
-    def pointer_prompt(self, job_file: Any) -> str:
-        return POINTER_PROMPT.format(job_file=job_file)
+    def pointer_prompt(self, job_file: Any, result_file: Any = None) -> str:
+        if result_file is None:
+            raise AdapterError("Kimi braucht im COMAS-Protokoll eine result_file")
+        return POINTER_PROMPT.format(job_file=job_file, result_file=result_file)
 
     def build_cmd(self, prompt: str, **overrides: Any) -> list[str]:
         if not isinstance(prompt, str) or not prompt.strip():
@@ -98,7 +112,11 @@ class KimiAdapter(CliAdapter):
                 "(Kimi bricht mit 'Cannot combine --prompt with --yolo/--auto' ab)"
             )
 
-        cmd = [self.executable, "-p", prompt]
+        cmd = [self.executable]
+        entrypoint = overrides.get("entrypoint", self.entrypoint)
+        if entrypoint is not None:
+            cmd.append(str(entrypoint))
+        cmd.extend(["-p", prompt])
         model = overrides.get("model", self.model)
         if model:
             cmd.extend(["-m", str(model)])

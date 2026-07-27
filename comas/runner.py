@@ -182,7 +182,9 @@ class JobRunner:
         """Einen Job blockierend abarbeiten."""
         paths = self.prepare(job_id)
         prompt = overrides.pop("prompt", None) or _pointer(self.adapter, paths)
-        spec = self.adapter.build_spec(prompt, **overrides)
+        spec = self.adapter.build_spec(
+            prompt, result_file=paths.result_file, **overrides
+        )
         self._announce(paths, list(spec.argv))
         outcome = self.spawner.run_spec(spec, log_file=paths.console_log)
         return self.finalize(paths, outcome)
@@ -195,7 +197,9 @@ class JobRunner:
         """
         paths = self.prepare(job_id)
         prompt = overrides.pop("prompt", None) or _pointer(self.adapter, paths)
-        spec = self.adapter.build_spec(prompt, **overrides)
+        spec = self.adapter.build_spec(
+            prompt, result_file=paths.result_file, **overrides
+        )
         self._announce(paths, list(spec.argv))
         process = self.spawner.start_spec(spec, log_file=paths.console_log)
         return JobHandle(self, paths, process)
@@ -208,7 +212,9 @@ class JobRunner:
         """
         paths = self.board.resolve(job_id)
         prompt = overrides.pop("prompt", None) or _pointer(self.adapter, paths)
-        spec = self.adapter.build_spec(prompt, **overrides)
+        spec = self.adapter.build_spec(
+            prompt, result_file=paths.result_file, **overrides
+        )
         return {
             "job_id": paths.job_id,
             "adapter": spec.adapter,

@@ -19,16 +19,16 @@ from comas.adapters import (
     get_adapter,
 )
 
-SKELETONS = (CodexAdapter, AgyAdapter, KimiAdapter)
+SKELETONS = (KimiAdapter,)
 
 
 class TestRegistry:
     def test_all_four_adapters_are_registered(self):
         assert adapter_names() == ["agy", "claude", "codex", "kimi"]
 
-    def test_only_claude_is_verified(self):
+    def test_claude_codex_and_agy_are_verified(self):
         verified = {row["name"] for row in describe_adapters() if row["verified"]}
-        assert verified == {"claude"}
+        assert verified == {"claude", "codex", "agy"}
 
     def test_get_adapter_by_name(self):
         assert isinstance(get_adapter("codex"), CodexAdapter)
@@ -66,32 +66,39 @@ class TestSpawnerGuard:
 
 
 class TestCodex:
-    def test_uses_the_versionless_companion_path(self):
+    def test_uses_native_exec_via_windows_node_entrypoint(self):
         cmd = CodexAdapter().build_cmd("Mach was")
         assert cmd[0] == "node"
-        assert "marketplaces" in cmd[1].replace("\\", "/")
-        assert "cache" not in cmd[1].replace("\\", "/")
-        assert cmd[2] == "task"
+        assert "@openai/codex/bin/codex.js" in cmd[1].replace("\\", "/")
+        assert cmd[2] == "exec"
         assert cmd[-1] == "Mach was"
 
     def test_read_only_by_default(self):
-        assert "--write" not in CodexAdapter().build_cmd("Mach was")
+        cmd = CodexAdapter().build_cmd("Mach was")
+        assert cmd[cmd.index("--sandbox") + 1] == "read-only"
 
     def test_write_flag_enables_file_output(self):
-        assert "--write" in CodexAdapter(write=True).build_cmd("Mach was")
+        cmd = CodexAdapter(write=True).build_cmd("Mach was")
+        assert cmd[cmd.index("--sandbox") + 1] == "workspace-write"
 
     def test_effort_and_cwd(self):
         cmd = CodexAdapter(effort="xhigh", cwd=r"C:\projekt").build_cmd("Mach was")
-        assert cmd[cmd.index("--effort") + 1] == "xhigh"
+        assert 'model_reasoning_effort="xhigh"' in cmd
         assert cmd[cmd.index("-C") + 1] == r"C:\projekt"
 
     def test_unknown_effort_is_rejected(self):
         with pytest.raises(AdapterError, match="effort"):
-            CodexAdapter(effort="ultra")
+            CodexAdapter(effort="impossible")
 
     def test_pointer_prompt_names_the_result_file(self):
         prompt = CodexAdapter().pointer_prompt("IN/job.md", "OUT/job.result.md")
-        assert "IN/job.md" in prompt and "OUT/job.result.md" in prompt
+        assert "IN/job.md" in prompt
+
+    def test_output_last_message_uses_protocol_result_file(self):
+        cmd = CodexAdapter().build_cmd(
+            "Mach was", result_file="OUT/job.result.md"
+        )
+        assert cmd[cmd.index("--output-last-message") + 1] == "OUT/job.result.md"
 
 
 class TestAgy:
@@ -107,6 +114,10 @@ class TestAgy:
     def test_prompt_comes_last_after_p(self):
         cmd = AgyAdapter().build_cmd("do it")
         assert cmd[-2:] == ["-p", "do it"]
+
+    def test_current_verified_default_model(self):
+        cmd = AgyAdapter().build_cmd("do it")
+        assert cmd[cmd.index("--model") + 1] == "Gemini 3.6 Flash (High)"
 
     def test_executable_is_the_exe_not_a_cmd(self):
         assert AgyAdapter().executable.lower().endswith("agy.exe")
@@ -124,10 +135,13 @@ class TestAgy:
 class TestKimi:
     def test_prompt_directly_after_p(self):
         cmd = KimiAdapter().build_cmd("mach was")
-        assert cmd[1:3] == ["-p", "mach was"]
+        index = cmd.index("-p")
+        assert cmd[index:index + 2] == ["-p", "mach was"]
 
-    def test_executable_is_kimi_code_exe(self):
-        assert KimiAdapter().executable.lower().endswith("kimi-code.exe")
+    def test_windows_uses_node_entrypoint(self):
+        cmd = KimiAdapter().build_cmd("mach was")
+        assert cmd[0] == "node"
+        assert "@moonshot-ai/kimi-code" in cmd[1].replace("\\", "/")
 
     @pytest.mark.parametrize("flag", ["-y", "--yolo", "--auto"])
     def test_incompatible_flags_are_refused(self, flag):

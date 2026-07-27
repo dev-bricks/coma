@@ -1,4 +1,4 @@
-"""Adaptergeruest fuer Gemini/Antigravity (``agy``) — **nicht live geprueft.**
+"""Adapter für Gemini/Antigravity (``agy``), live geprüft.
 
 ``verified = False``: :class:`comas.spawn.Spawner` startet diesen Adapter nur mit
 ausdruecklichem ``allow_unverified=True``.
@@ -8,11 +8,9 @@ Dort empirisch belegt, hier nur abgeleitet — vor scharfer Nutzung dort nachles
 
 Die harten Punkte:
 
-1. **``agy -p`` liefert Exit 0, aber keinen stdout.** Der TUI-Text-Drip-Renderer
-   schreibt in den Terminal-Buffer, nicht nach stdout (bekannte Bugs:
-   antigravity-cli#76, gemini-cli#27466). Die Rueckgabe **muss** ueber eine Datei
-   laufen — deshalb ist ``result_file`` im Zeiger-Prompt Pflicht, nicht Komfort.
-   Fuer COMAS ist das kein Sonderfall: das Protokoll gibt ohnehin Dateien zurueck.
+1. **``agy -p`` liefert wieder stdout.** Live-Probe am 2026-07-27 mit agy 1.1.7:
+   Exit 0 und ``COMAS_AGY_OK`` auf stdout. COMAS nutzt für Jobläufe trotzdem
+   weiterhin die Ergebnisdatei als dauerhaften Protokollkanal.
 2. **Berechtigung und Workspace sind zwei verschiedene Dinge.**
    ``--dangerously-skip-permissions`` hebt nur die Tool-Freigabe auf und
    erweitert den Workspace **nicht**. Wo geschrieben werden darf, legt
@@ -40,7 +38,10 @@ DEFAULT_EXECUTABLE = str(
     / "agy.exe"
 )
 #: Bevorzugte Modelle laut ``~/CLAUDE.md``.
-PREFERRED_MODELS: tuple[str, ...] = ("gemini-3.5-flash", "gemini-3.5-pro")
+PREFERRED_MODELS: tuple[str, ...] = (
+    "Gemini 3.6 Flash (High)",
+    "Gemini 3.1 Pro (High)",
+)
 
 POINTER_PROMPT = (
     "Read the file {job_file} and follow it completely. "
@@ -49,15 +50,15 @@ POINTER_PROMPT = (
 
 
 class AgyAdapter(CliAdapter):
-    """Baut ``agy.exe``-Kommandos. Geruest, nicht live geprueft."""
+    """Baut live geprüfte ``agy.exe``-Kommandos."""
 
     name = "agy"
     display_name = "Gemini / Antigravity (agy)"
     executable = DEFAULT_EXECUTABLE
-    verified = False
+    verified = True
     notes = (
-        "GERUEST: Kommandobau getestet, Aufrufweg nicht live geprueft.",
-        "agy -p gibt KEINEN stdout aus — Rueckgabe zwingend ueber Datei.",
+        "Live geprüft mit agy 1.1.7 am 2026-07-27 (stdout und Exit 0).",
+        "Ergebnisdatei bleibt für dauerhafte COMAS-Jobs der kanonische Kanal.",
         "--add-dir bestimmt den Workspace; die Permission-Flag tut das NICHT.",
         "Nur agy.exe, keine agy.cmd; aus Subprozessen absoluten Pfad nutzen.",
         "companion-for-agy verstuemmelt CJK — nur fuer kurze ASCII-Antworten.",
@@ -65,7 +66,7 @@ class AgyAdapter(CliAdapter):
 
     def __init__(
         self,
-        model: str = "gemini-3.5-pro",
+        model: str = "Gemini 3.6 Flash (High)",
         *,
         add_dirs: Sequence[str | os.PathLike[str]] = (),
         skip_permissions: bool = True,
@@ -85,12 +86,12 @@ class AgyAdapter(CliAdapter):
 
         Englisch, weil das die dokumentierte Form ist, mit der die Datei-Rueckgabe
         verifiziert wurde. Der Zielpfad ist Pflicht (Punkt 1 im Modul-Docstring):
-        ohne Datei gibt es kein Ergebnis, denn stdout bleibt leer.
+        als dauerhafte Rückgabe im Jobprotokoll.
         """
         if result_file is None:
             raise AdapterError(
-                "agy gibt keinen stdout aus — result_file ist Pflicht, "
-                "sonst ist das Ergebnis nicht abholbar"
+                "COMAS-Jobs mit agy brauchen eine result_file als dauerhaften "
+                "Ergebniskanal"
             )
         return POINTER_PROMPT.format(job_file=job_file, result_file=result_file)
 

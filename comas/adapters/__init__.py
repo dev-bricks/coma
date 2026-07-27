@@ -3,7 +3,7 @@
 Der Unterschied zwischen den Anbietern ist genau das — ein Kommando-Template.
 Deshalb sind es Adapter und keine Unterklassen mit eigener Prozesslogik.
 
-Nur ``claude`` ist verifiziert. ``codex``, ``agy`` und ``kimi`` sind Geruest mit
+``claude``, ``codex`` und ``agy`` sind verifiziert. ``kimi`` bleibt ein Gerüst mit
 dokumentierter Aufrufkonvention: der Kommandobau ist getestet, der scharfe
 Aufrufweg nicht. :class:`comas.spawn.Spawner` startet sie nur mit
 ausdruecklichem ``allow_unverified=True``.

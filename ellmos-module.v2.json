@@ -7,7 +7,7 @@
   "kind": "library",
   "status": "development",
   "visibility": "public",
-  "description": "Lebenszyklus-Schicht fuer Agenten: Wie entsteht ein Agent als eigener Prozess, und wie bleibt man mit ihm in Kontakt, solange er laeuft? Spawn-Schicht mit CLI-Adaptern (claude verifiziert; codex, agy, kimi als Geruest), Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. Sperrt nichts, verwaltet keine Rechte, haelt kein Gedaechtnis.",
+  "description": "Provider-unabhaengige Orchestrierungs- und Lebenszyklus-Schicht fuer Agentenprozesse. Spawn-Schicht mit verifizierten CLI-Adaptern fuer Claude, Codex und Agy sowie fail-closed Kimi-Geruest, Datei-Protokoll mit einem Schreiber je Datei, Statusschreiber und Poll-Hilfen. COMAS ist kein Scheduler, sperrt nichts, verwaltet keine Rechte und haelt kein Gedaechtnis.",
   "package": "comas",
   "entrypoints": {
     "cli": "python -m comas",
@@ -56,21 +56,21 @@
     },
     {
       "id": "codex",
-      "target": "codex-companion.mjs",
-      "status": "skeleton",
-      "note": "Kommandobau getestet, Aufrufweg nicht live geprueft. Konvention aus ~/CLAUDE.md."
+      "target": "codex exec",
+      "status": "verified",
+      "note": "Codex CLI 0.145.0 am 2026-07-27 read-only live ausgefuehrt; stabiler Node-Einstieg, Ergebnis via --output-last-message."
     },
     {
       "id": "agy",
       "target": "antigravity-agy",
-      "status": "skeleton",
-      "note": "Kommandobau getestet, Aufrufweg nicht live geprueft. Rueckgabe zwingend ueber Datei (kein stdout)."
+      "status": "verified",
+      "note": "agy 1.1.7 am 2026-07-27 live ausgefuehrt; aktuelles Modellinventar und stdout/Exitcode geprueft."
     },
     {
       "id": "kimi",
       "target": "kimi-code-cli",
       "status": "skeleton",
-      "note": "Kommandobau getestet, Aufrufweg nicht live geprueft. -p nicht mit --yolo/--auto kombinierbar."
+      "note": "Kimi Code 0.17.1 gefunden; stabiler Node-Einstieg geprueft, Prompt-Lauf ohne konfiguriertes Modell fail-closed. Kein Scheduler oder aktive Eigen-Synchronisierung belegt."
     }
   ]
 }

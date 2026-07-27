@@ -145,9 +145,9 @@ while handle.poll() is None:
 | Adapter | Ziel | Stand |
 |---|---|---|
 | `claude` | Claude Code CLI | **verifiziert** — Flags gegen `claude --help` 2.1.220 geprüft, echter Durchlauf belegt |
-| `codex` | `codex-companion.mjs` | **Gerüst** — Kommandobau getestet, Aufrufweg nicht live geprüft |
-| `agy` | Antigravity/Gemini | **Gerüst** — Rückgabe zwingend über Datei (kein stdout) |
-| `kimi` | Kimi Code CLI | **Gerüst** — `-p` nicht mit `--yolo`/`--auto` kombinierbar |
+| `codex` | native `codex exec` | **Verifiziert** — CLI 0.145.0, read-only/workspace-write, Ergebnisdatei via `--output-last-message` |
+| `agy` | Antigravity/Gemini | **Verifiziert** — agy 1.1.7, stdout und Exitcode live geprüft; Job-Ergebnisdatei bleibt kanonisch |
+| `kimi` | Kimi Code CLI | **Gerüst** — CLI 0.17.1 gefunden, aber ohne konfiguriertes Modell kein Prompt-Lauf |
 
 `verified` ist keine Kosmetik: Der `Spawner` **weigert sich**, einen Gerüst-Adapter
 zu starten, solange nicht ausdrücklich `allow_unverified=True` gesetzt ist. So ist
@@ -318,7 +318,7 @@ gewährt alles, merkt sich nichts.
 ## Tests
 
 ```bat
-python -m pytest -q      :: 230 Tests
+python -m pytest -q      :: 228 Tests
 ```
 
 **Kein Test startet einen echten Prozess.** `subprocess` wird überall ersetzt; das

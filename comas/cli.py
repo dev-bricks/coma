@@ -66,7 +66,29 @@ _PRESET_FIELDS = (
 def _adapter_from_args(args: argparse.Namespace) -> Any:
     """Adapter aus den CLI-Argumenten bauen: Preset als Grundlage, Flags darueber."""
     if args.adapter != ClaudeAdapter.name:
-        return get_adapter(args.adapter)
+        flags: dict[str, Any] = {}
+        for field in ("model", "timeout", "cwd", "output_format"):
+            value = getattr(args, field, None)
+            if value is not None:
+                flags[field] = value
+        if args.adapter == "codex":
+            if args.effort:
+                flags["effort"] = args.effort
+            if args.write:
+                flags["write"] = True
+            if args.persist_sessions:
+                flags["persist_sessions"] = True
+        elif args.adapter == "agy":
+            if args.add_dir:
+                flags["add_dirs"] = args.add_dir
+            if args.skip_permissions is not None:
+                flags["skip_permissions"] = args.skip_permissions
+        elif args.adapter == "kimi":
+            if args.session:
+                flags["session"] = args.session
+            if args.continue_conversation:
+                flags["continue_conversation"] = True
+        return get_adapter(args.adapter, **flags)
 
     base: dict[str, Any] = {}
     if args.preset:
@@ -138,6 +160,30 @@ def _add_adapter_options(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--timeout", type=int, help="Zeitgrenze in Sekunden")
     parser.add_argument("--cwd", help="Arbeitsverzeichnis des Agenten")
+    parser.add_argument(
+        "--effort",
+        choices=("low", "medium", "high", "xhigh", "max", "ultra"),
+        help="Codex reasoning effort",
+    )
+    parser.add_argument(
+        "--write", action="store_true",
+        help="Codex workspace-write statt read-only",
+    )
+    parser.add_argument(
+        "--add-dir", action="append", default=[],
+        help="zusätzliche Agy-Arbeitswurzel (wiederholbar)",
+    )
+    parser.add_argument(
+        "--skip-permissions",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Agy-Berechtigungsabfragen überspringen",
+    )
+    parser.add_argument("--session", help="Kimi-Sitzungs-ID")
+    parser.add_argument(
+        "--continue-conversation", action="store_true",
+        help="bestehende Kimi-Sitzung fortsetzen",
+    )
     parser.add_argument(
         "--allow-unverified", action="store_true",
         help="nicht live gepruefte Adapter (codex, agy, kimi) trotzdem starten",

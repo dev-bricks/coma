@@ -1,82 +1,70 @@
-"""Adaptergeruest fuer Codex (GPT) — **nicht live geprueft.**
+"""Adapter für die native, nichtinteraktive Codex-CLI.
 
-``verified = False``: :class:`comas.spawn.Spawner` startet diesen Adapter nur,
-wenn der Aufrufer ausdruecklich ``allow_unverified=True`` setzt. Der Kommandobau
-ist vollstaendig und getestet, der echte Aufrufweg ist es nicht.
-
-Quelle der Aufrufkonvention: ``~/CLAUDE.md``, Abschnitt „Codex CLI (GPT) —
-Nutzung aus Claude Code". Nichts davon ist geraten; alles ist dort empirisch
-belegt. Vor der ersten scharfen Nutzung diesen Abschnitt erneut lesen — er ist
-die gepflegte Quelle, dieser Docstring nur die Ableitung.
-
-Die harten Punkte:
-
-1. **Nicht ``codex exec`` per Pipe.** Haengt im PowerShell-Kontext
-   (stdin-Handling-Bug). Stattdessen das Companion-Skript.
-2. **Der Companion-Pfad ist versionslos zu halten.** ``marketplaces/…`` ueberlebt
-   Plugin-Updates; der Pfad unter ``cache/openai-codex/codex/<version>/`` wandert
-   bei jedem Update und stirbt mit ``MODULE_NOT_FOUND``.
-3. **Ohne ``--write`` laeuft der Turn read-only** (``sandbox: "read-only"``) und
-   kann nur ueber stdout antworten — bei langen Antworten wird das abgeschnitten.
-   Fuer Dateirueckgabe ``--write`` setzen.
-4. **Die beschreibbare Wurzel ist der git-Repo-Root von cwd**, sonst cwd selbst.
-   Also aus dem Zielprojekt heraus aufrufen oder ``-C`` setzen; der Zielordner
-   muss **vorher existieren**; im Prompt den **relativen** Zielpfad nennen.
+Die frühere Fassung nutzte ein Claude-Plugin-Companion und warnte vor
+``codex exec``. Das ist für Codex CLI 0.145.0 veraltet: ``codex exec`` ist der
+offizielle Automationsweg und unterstützt Arbeitswurzel, Sandbox, Modell,
+Reasoning-Effort sowie eine belastbare Ergebnisdatei.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Sequence
 
 from .base import AdapterError, CliAdapter
 
-#: Versionsloser Companion-Pfad (siehe Punkt 2 im Modul-Docstring).
-COMPANION_RELATIVE = (
-    ".claude/plugins/marketplaces/openai-codex/plugins/codex/scripts/codex-companion.mjs"
-)
-KNOWN_EFFORTS: tuple[str, ...] = ("none", "low", "medium", "high", "xhigh")
+KNOWN_EFFORTS: tuple[str, ...] = ("low", "medium", "high", "xhigh", "max", "ultra")
+KNOWN_SANDBOXES: tuple[str, ...] = ("read-only", "workspace-write", "danger-full-access")
 
-POINTER_PROMPT = (
-    "Lies die Datei {job_file} und arbeite sie vollstaendig ab. "
-    "Schreibe dein Ergebnis nach {result_file}."
-)
+POINTER_PROMPT = "Lies die Datei {job_file} und arbeite sie vollständig ab."
 
 
-def default_companion_path(home: Path | None = None) -> Path:
-    """Den Companion im Home des Nutzers verorten (ohne zu pruefen, ob er da ist)."""
-    return (home or Path.home()) / COMPANION_RELATIVE
+def default_codex_entrypoint(home: Path | None = None) -> Path | None:
+    """Windows-NPM-Entrypoint ohne CMD-Reparsing; sonst native CLI."""
+    if os.name != "nt":
+        return None
+    user_home = home or Path.home()
+    appdata = Path(os.environ.get("APPDATA") or user_home / "AppData" / "Roaming")
+    return appdata / "npm" / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
 
 
 class CodexAdapter(CliAdapter):
-    """Baut ``node <companion> task …``-Kommandos. Geruest, nicht live geprueft."""
+    """Baut ``codex exec``-Kommandos für unbeaufsichtigte Läufe."""
 
     name = "codex"
-    display_name = "Codex (GPT) via codex-companion.mjs"
-    executable = "node"
-    verified = False
+    display_name = "Codex CLI (native exec)"
+    executable = "node" if os.name == "nt" else "codex"
+    verified = True
     notes = (
-        "GERUEST: Kommandobau getestet, Aufrufweg nicht live geprueft.",
-        "codex exec per Pipe haengt in PowerShell — nur der Companion.",
-        "Companion-Pfad versionslos halten (marketplaces/, nicht cache/<version>/).",
-        "Ohne --write laeuft der Turn read-only und kann keine Datei schreiben.",
-        "Beschreibbare Wurzel = git-Repo-Root von cwd; Zielordner muss existieren.",
+        "Native codex exec flags gegen Codex CLI 0.145.0 geprüft (2026-07-27).",
+        "Unter Windows direkter Node-Entrypoint statt CMD/PowerShell-Reparsing.",
+        "Standard: read-only, ephemere Sitzung, Hook-Trust bleibt aktiv.",
+        "Ergebnis wird mit --output-last-message in die COMAS-Ergebnisdatei geschrieben.",
     )
 
     def __init__(
         self,
         *,
-        companion: str | Path | None = None,
+        entrypoint: str | Path | None = None,
         effort: str | None = None,
         write: bool = False,
+        sandbox: str | None = None,
         model: str | None = None,
+        persist_sessions: bool = False,
+        skip_git_repo_check: bool = True,
         extra_args: Sequence[str] = (),
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.companion = Path(companion) if companion else default_companion_path()
+        self.entrypoint = (
+            Path(entrypoint) if entrypoint is not None else default_codex_entrypoint()
+        )
         self.effort = self._check_effort(effort)
         self.write = bool(write)
+        self.sandbox = self._check_sandbox(sandbox)
         self.model = model
+        self.persist_sessions = bool(persist_sessions)
+        self.skip_git_repo_check = bool(skip_git_repo_check)
         self.extra_args = [str(arg) for arg in extra_args]
 
     @staticmethod
@@ -87,38 +75,54 @@ class CodexAdapter(CliAdapter):
             raise AdapterError(
                 f"unbekanntes effort {value!r} — erlaubt: {', '.join(KNOWN_EFFORTS)}"
             )
-        return value
+        return str(value)
+
+    @staticmethod
+    def _check_sandbox(value: Any) -> str | None:
+        if value is None:
+            return None
+        if value not in KNOWN_SANDBOXES:
+            raise AdapterError(
+                f"unbekannte Sandbox {value!r} — erlaubt: {', '.join(KNOWN_SANDBOXES)}"
+            )
+        return str(value)
 
     def pointer_prompt(self, job_file: Any, result_file: Any = None) -> str:
-        """Zeiger-Prompt mit ausdruecklichem Ergebnispfad.
-
-        Codex braucht den Zielpfad im Prompt, weil die Sandbox-Wurzel aus cwd
-        abgeleitet wird und ein **relativer** Pfad erwartet ist.
-        """
-        return POINTER_PROMPT.format(
-            job_file=job_file, result_file=result_file or "<Ergebnisdatei>"
-        )
+        return POINTER_PROMPT.format(job_file=job_file)
 
     def build_cmd(self, prompt: str, **overrides: Any) -> list[str]:
         if not isinstance(prompt, str) or not prompt.strip():
             raise AdapterError("prompt muss ein nicht-leerer String sein")
-        companion = Path(overrides.get("companion", self.companion))
+
+        entrypoint = overrides.get("entrypoint", self.entrypoint)
         effort = self._check_effort(overrides.get("effort", self.effort))
         write = bool(overrides.get("write", self.write))
+        sandbox = self._check_sandbox(overrides.get("sandbox", self.sandbox))
+        sandbox = sandbox or ("workspace-write" if write else "read-only")
         model = overrides.get("model", self.model)
         cwd = overrides.get("cwd", self.cwd)
+        result_file = overrides.get("result_file")
+        persist = bool(overrides.get("persist_sessions", self.persist_sessions))
+        skip_repo = bool(
+            overrides.get("skip_git_repo_check", self.skip_git_repo_check)
+        )
 
-        cmd = [self.executable, str(companion), "task"]
-        if write:
-            # Ohne dieses Flag laeuft der Turn read-only und kann keine Datei anlegen.
-            cmd.append("--write")
-        if effort:
-            cmd.extend(["--effort", effort])
+        cmd = [self.executable]
+        if entrypoint is not None:
+            cmd.append(str(entrypoint))
+        cmd.extend(["exec", "--sandbox", sandbox])
+        if cwd:
+            cmd.extend(["-C", str(cwd)])
+        if skip_repo:
+            cmd.append("--skip-git-repo-check")
+        if not persist:
+            cmd.append("--ephemeral")
         if model:
             cmd.extend(["--model", str(model)])
-        if cwd:
-            # -C setzt cwd des Turns; die beschreibbare Wurzel folgt daraus.
-            cmd.extend(["-C", str(cwd)])
+        if effort:
+            cmd.extend(["--config", f'model_reasoning_effort="{effort}"'])
+        if result_file:
+            cmd.extend(["--output-last-message", str(result_file)])
         cmd.extend(str(arg) for arg in overrides.get("extra_args", self.extra_args))
         cmd.append(prompt)
         return cmd

@@ -124,15 +124,46 @@ class TestDryRun:
                 "run",
                 "testjob",
                 "--adapter",
-                "agy",
+                "kimi",
                 "--dry-run",
             ],
             capsys,
         )
         payload = json.loads(out)
         assert code == 0
-        assert payload["adapter"] == "agy"
+        assert payload["adapter"] == "kimi"
         assert payload["verified"] is False
+
+    def test_codex_cli_options_reach_native_adapter(self, capsys):
+        code, out = run_cli(
+            [
+                "--json", "cmd", "Hallo", "--adapter", "codex",
+                "--model", "gpt-5.4", "--effort", "high",
+                "--cwd", r"C:\projekt", "--write",
+            ],
+            capsys,
+        )
+        payload = json.loads(out)
+        argv = payload["argv"]
+        assert code == 0 and payload["verified"] is True
+        assert argv[argv.index("--sandbox") + 1] == "workspace-write"
+        assert argv[argv.index("--model") + 1] == "gpt-5.4"
+        assert 'model_reasoning_effort="high"' in argv
+
+    def test_agy_cli_options_are_not_dropped(self, capsys):
+        code, out = run_cli(
+            [
+                "--json", "cmd", "Hallo", "--adapter", "agy",
+                "--model", "gemini-test", "--add-dir", r"C:\projekt",
+                "--no-skip-permissions",
+            ],
+            capsys,
+        )
+        argv = json.loads(out)["argv"]
+        assert code == 0
+        assert argv[argv.index("--model") + 1] == "gemini-test"
+        assert argv[argv.index("--add-dir") + 1] == r"C:\projekt"
+        assert "--dangerously-skip-permissions" not in argv
 
 
 class TestReadCommands:
@@ -194,7 +225,7 @@ class TestReadCommands:
         code, out = run_cli(["adapters"], capsys)
         assert code == 0
         assert "claude" in out and "geprueft" in out
-        assert out.count("GERUEST") >= 3
+        assert out.count("GERUEST") >= 1
 
     def test_unknown_job_id_is_a_clean_error(self, board, capsys):
         code, _ = run_cli(["--root", str(board.root), "status", "../flucht"], capsys)
