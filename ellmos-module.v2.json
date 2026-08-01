@@ -70,7 +70,7 @@
       "id": "kimi",
       "target": "kimi-code-cli",
       "status": "skeleton",
-      "note": "Kimi Code 0.17.1 gefunden; stabiler Node-Einstieg geprueft, Prompt-Lauf ohne konfiguriertes Modell fail-closed. Kein Scheduler oder aktive Eigen-Synchronisierung belegt."
+      "note": "Kimi Code 0.29.2 gefunden; der COMA-Adapter bleibt bis zu einem eigenen Prompt-Lauf unverified und startet ohne ausdrueckliche Freigabe fail-closed. COMA selbst besitzt keinen Scheduler und keine aktive Eigen-Synchronisierung."
     }
   ]
 }

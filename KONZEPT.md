@@ -1,8 +1,8 @@
 # COMA — COMmunication for Autonomous Subagents
 
 > Modul-Konzept. Beschlossen von Lukas Geiger am 2026-07-26, erarbeitet in Session
-> „OPUS WORKSTATION". Status: **Modul gebaut** (`coma` 0.1.0, 2026-07-26) — die
-> Spawn-Schicht ist aus den drei bestehenden Implementierungen extrahiert, 227 Tests
+> „OPUS WORKSTATION". Status: **Modul gebaut** (`coma` 0.2.0, 2026-08-01) — die
+> Spawn-Schicht ist aus den drei bestehenden Implementierungen extrahiert, 233 Tests
 > laufen ohne Prozessstart, ein echter Durchlauf über die Python-Schicht ist belegt.
 > Referenzimplementierung (`.bat`) existiert weiter und bleibt lokal.
 > Siehe `README.md`, „Offen" unten und den Ergebnisbericht
@@ -77,7 +77,7 @@ Damit das Modul nicht mit einer Maschine verwachsen geboren wird:
 
 **Modul (allgemein, veröffentlichbar):**
 - Das COMA-Protokoll (Verzeichnis- und Dateikonvention, siehe unten)
-- Der Statusschreiber (`coma_status.py`)
+- Der Statusschreiber (`coma/status.py`)
 - Die Spawn-Schicht mit **CLI-Adaptern**: claude, codex, agy, kimi — der Unterschied
   zwischen ihnen ist ein Kommando-Template plus Flags. Diese Adapter werden **aus
   bestehendem Code extrahiert** (`llmauto/core/runner.py`, `swarm-ai/tools/runner.py`,
@@ -185,7 +185,7 @@ Nachrichten") — der Zustellweg ist dort konzeptionell vorgesehen, Status heute
 
 ## Offen
 
-Stand 2026-07-26, nach dem Bau des Moduls (`coma` 0.1.0, Ergebnisbericht:
+Stand 2026-08-01, nach dem Bau des Moduls (`coma` 0.2.0, Ergebnisbericht:
 `_agentjobs/OUT/coma-modul-bauen.result.md`).
 
 - [x] `ellmos-module.v2.json` — liegt vor, mit Adapter-Abschnitt und Stand je Adapter
