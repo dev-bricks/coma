@@ -1,0 +1,308 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070a12"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+
+    <linearGradient id="track-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a" stop-opacity="0.2"/>
+      <stop offset="30%" stop-color="#1e293b" stop-opacity="0.8"/>
+      <stop offset="70%" stop-color="#1e293b" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.2"/>
+    </linearGradient>
+
+    <!-- Zone Glow Gradient -->
+    <linearGradient id="zone-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <!-- Title Text Gradient -->
+    <linearGradient id="title-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <!-- Robot Color Gradients -->
+    <!-- Bot 1: Cyan/Blue -->
+    <linearGradient id="bot1-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    
+    <!-- Bot 2: Purple/Violet -->
+    <linearGradient id="bot2-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#7e22ce"/>
+    </linearGradient>
+
+    <!-- Bot 3: Emerald/Green -->
+    <linearGradient id="bot3-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Bot 4: Gold/Amber -->
+    <linearGradient id="bot4-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <!-- Baton Energy Glow -->
+    <linearGradient id="baton-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff176"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="glow-intense" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur1" />
+      <feGaussianBlur stdDeviation="5" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark Background -->
+  <rect width="1200" height="630" fill="url(#bg-grad)"/>
+
+  <!-- Grid Pattern Overlay -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1">
+    <path d="M 0,100 L 1200,100 M 0,200 L 1200,200 M 0,300 L 1200,300 M 0,400 L 1200,400 M 0,500 L 1200,500" />
+    <path d="M 150,0 L 150,630 M 300,0 L 300,630 M 450,0 L 450,630 M 600,0 L 600,630 M 750,0 L 750,630 M 900,0 L 900,630 M 1050,0 L 1050,630" />
+  </g>
+
+  <!-- Dynamic Speed & Energy Lines (Background Comic Lines) -->
+  <g opacity="0.15" stroke="#38bdf8" stroke-width="2" stroke-dasharray="8 12">
+    <line x1="-50" y1="420" x2="1250" y2="420" />
+    <line x1="-50" y1="480" x2="1250" y2="480" />
+    <line x1="-50" y1="530" x2="1250" y2="530" />
+  </g>
+  <g opacity="0.25" stroke="#818cf8" stroke-width="1.5">
+    <path d="M 100 380 L 250 360 M 350 370 L 520 340 M 680 360 L 880 330 M 980 350 L 1150 320" stroke-dasharray="15 10"/>
+  </g>
+
+  <!-- Running Track Base -->
+  <polygon points="50,560 1150,560 1100,440 100,440" fill="url(#track-grad)" />
+  <line x1="50" y1="560" x2="1150" y2="560" stroke="#334155" stroke-width="4"/>
+  <line x1="100" y1="440" x2="1100" y2="440" stroke="#334155" stroke-width="2"/>
+
+  <!-- Relay Exchange / Handoff Zone Highlight -->
+  <polygon points="460,560 740,560 710,440 490,440" fill="url(#zone-grad)"/>
+  <line x1="460" y1="560" x2="490" y2="440" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6 6"/>
+  <line x1="740" y1="560" x2="710" y2="440" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6 6"/>
+
+  <!-- Handoff Zone Label on Floor -->
+  <text x="600" y="545" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="800" fill="#38bdf8" letter-spacing="3" text-anchor="middle" opacity="0.85">HANDOFF ZONE // SESSION RELAY</text>
+
+  <!-- Track Lane Markers (IN / OUT / DONE) -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#64748b">
+    <text x="230" y="582" text-anchor="middle">[ IN/ JOB_01 ]</text>
+    <text x="600" y="582" text-anchor="middle" fill="#38bdf8">[ IN/ ➔ OUT/ HANDOFF ]</text>
+    <text x="970" y="582" text-anchor="middle">[ DONE/ COMPLETED ]</text>
+  </g>
+
+  <!-- ==================== AGENT ROBOTS (STAFFELLAUF) ==================== -->
+
+  <!-- AGENT 1: Left (Blue/Cyan Bot - Leg 1 Passed) -->
+  <g transform="translate(180, 260)">
+    <!-- Motion trail -->
+    <path d="M -40 140 Q -10 130 20 140" stroke="#0ea5e9" stroke-width="3" fill="none" opacity="0.4" stroke-dasharray="4 4"/>
+    <!-- Shadow -->
+    <ellipse cx="20" cy="185" rx="35" ry="8" fill="#000000" opacity="0.5"/>
+    
+    <!-- Body & Limbs (Running stance, completed leg) -->
+    <!-- Legs -->
+    <path d="M 10 130 L -15 175 L -30 180" stroke="#1e293b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 10 130 L -15 175 L -30 180" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 25 130 L 45 160 L 60 182" stroke="#1e293b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 25 130 L 45 160 L 60 182" stroke="#0284c7" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Torso -->
+    <rect x="0" y="70" width="40" height="65" rx="10" fill="url(#bot1-body)" stroke="#0f172a" stroke-width="3"/>
+    <!-- Chest Core -->
+    <circle cx="20" cy="95" r="8" fill="#e0f2fe" filter="url(#glow)"/>
+    <circle cx="20" cy="95" r="4" fill="#38bdf8"/>
+
+    <!-- Arms -->
+    <path d="M 5 80 L -25 105 L -15 125" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 5 80 L -25 105 L -15 125" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 35 80 L 60 100 L 75 90" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 35 80 L 60 100 L 75 90" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Head -->
+    <rect x="2" y="25" width="36" height="34" rx="8" fill="url(#bot1-body)" stroke="#0f172a" stroke-width="3"/>
+    <!-- Visor -->
+    <rect x="8" y="35" width="24" height="12" rx="4" fill="#0284c7"/>
+    <ellipse cx="20" cy="41" rx="9" ry="3" fill="#e0f2fe" filter="url(#glow)"/>
+    <!-- Antenna -->
+    <line x1="20" y1="25" x2="20" y2="12" stroke="#38bdf8" stroke-width="3"/>
+    <circle cx="20" cy="10" r="4" fill="#38bdf8" filter="url(#glow)"/>
+  </g>
+
+  <!-- AGENT 2: Middle-Left (Purple Bot - Passing Baton) -->
+  <g transform="translate(420, 230)">
+    <!-- Motion Trail -->
+    <path d="M -50 170 Q -10 160 30 170" stroke="#c084fc" stroke-width="4" fill="none" opacity="0.5" stroke-dasharray="6 4"/>
+    <!-- Shadow -->
+    <ellipse cx="40" cy="215" rx="40" ry="9" fill="#000000" opacity="0.6"/>
+
+    <!-- Legs (Dynamic Forward Sprint) -->
+    <path d="M 20 150 L -20 185 L -40 210" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 20 150 L -20 185 L -40 210" stroke="#7e22ce" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 45 150 L 75 180 L 95 212" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 45 150 L 75 180 L 95 212" stroke="#c084fc" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Torso (Leaning forward) -->
+    <g transform="rotate(12, 35, 110)">
+      <rect x="10" y="80" width="48" height="70" rx="12" fill="url(#bot2-body)" stroke="#0f172a" stroke-width="3"/>
+      <!-- Chest Emblem -->
+      <polygon points="34,95 44,115 24,115" fill="#f472b6" filter="url(#glow)"/>
+
+      <!-- Back Arm -->
+      <path d="M 15 90 L -25 110 L -40 100" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 15 90 L -25 110 L -40 100" stroke="#7e22ce" stroke-width="5" stroke-linecap="round"/>
+
+      <!-- Head -->
+      <rect x="12" y="30" width="42" height="38" rx="10" fill="url(#bot2-body)" stroke="#0f172a" stroke-width="3"/>
+      <!-- Visor -->
+      <rect x="18" y="42" width="30" height="14" rx="5" fill="#581c87"/>
+      <ellipse cx="33" cy="49" rx="11" ry="4" fill="#f472b6" filter="url(#glow)"/>
+      <!-- Ear Bolts -->
+      <circle cx="9" cy="49" r="4" fill="#c084fc"/>
+      <circle cx="57" cy="49" r="4" fill="#c084fc"/>
+
+      <!-- Front Arm (Reaching Forward with Baton Hand) -->
+      <path d="M 50 95 L 95 90 L 125 80" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 50 95 L 95 90 L 125 80" stroke="#e879f9" stroke-width="6" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- THE GLOWING BATON (STAFFELSTAB - HANDOFF POINT) -->
+  <g transform="translate(565, 290)" filter="url(#glow-intense)">
+    <!-- Energy Aura/Arcs -->
+    <circle cx="15" cy="15" r="35" fill="#38bdf8" opacity="0.25"/>
+    <circle cx="15" cy="15" r="22" fill="#fbbf24" opacity="0.4"/>
+    <!-- Baton Core -->
+    <rect x="-15" y="4" width="60" height="16" rx="8" fill="url(#baton-grad)" transform="rotate(-15)" stroke="#ffffff" stroke-width="2"/>
+    <!-- Energy Rings -->
+    <line x1="-5" y1="-5" x2="-2" y2="35" stroke="#ffffff" stroke-width="3" opacity="0.9"/>
+    <line x1="15" y1="-10" x2="18" y2="30" stroke="#ffffff" stroke-width="3" opacity="0.9"/>
+    <line x1="35" y1="-15" x2="38" y2="25" stroke="#ffffff" stroke-width="3" opacity="0.9"/>
+    <!-- Text on Baton -->
+    <text x="14" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="900" fill="#0f172a" text-anchor="middle" transform="rotate(-15, 14, 18)">TASK DATA</text>
+  </g>
+
+  <!-- AGENT 3: Middle-Right (Emerald Bot - Receiving Baton) -->
+  <g transform="translate(640, 220)">
+    <!-- Motion Trail -->
+    <path d="M -30 180 Q 20 170 60 180" stroke="#34d399" stroke-width="4" fill="none" opacity="0.5" stroke-dasharray="6 4"/>
+    <!-- Shadow -->
+    <ellipse cx="40" cy="225" rx="42" ry="9" fill="#000000" opacity="0.6"/>
+
+    <!-- Legs (Reaching Backwards while Accelerating) -->
+    <path d="M 25 160 L -15 195 L -35 220" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 25 160 L -15 195 L -35 220" stroke="#059669" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 50 160 L 85 190 L 110 222" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 50 160 L 85 190 L 110 222" stroke="#34d399" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Torso -->
+    <g transform="rotate(-8, 40, 120)">
+      <rect x="15" y="85" width="46" height="72" rx="12" fill="url(#bot3-body)" stroke="#0f172a" stroke-width="3"/>
+      <!-- Chest Light -->
+      <rect x="26" y="100" width="24" height="12" rx="4" fill="#a7f3d0" filter="url(#glow)"/>
+
+      <!-- Back Arm (Extended backward to catch baton) -->
+      <path d="M 20 100 L -45 95 L -70 85" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 20 100 L -45 95 L -70 85" stroke="#6ee7b7" stroke-width="6" stroke-linecap="round"/>
+
+      <!-- Head (Looking back toward baton) -->
+      <rect x="15" y="32" width="44" height="40" rx="10" fill="url(#bot3-body)" stroke="#0f172a" stroke-width="3"/>
+      <!-- Visor -->
+      <rect x="20" y="44" width="32" height="14" rx="5" fill="#064e3b"/>
+      <ellipse cx="36" cy="51" rx="12" ry="4" fill="#6ee7b7" filter="url(#glow)"/>
+      <!-- Dual Antennas -->
+      <line x1="25" y1="32" x2="18" y2="15" stroke="#34d399" stroke-width="3"/>
+      <circle cx="16" cy="13" r="3" fill="#6ee7b7"/>
+      <line x1="48" y1="32" x2="55" y2="15" stroke="#34d399" stroke-width="3"/>
+      <circle cx="57" cy="13" r="3" fill="#6ee7b7"/>
+
+      <!-- Front Arm (Pumped Forward for Speed) -->
+      <path d="M 52 100 L 80 120 L 95 105" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 52 100 L 80 120 L 95 105" stroke="#059669" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- AGENT 4: Right (Gold/Amber Bot - Sprinting Ahead to Next Session) -->
+  <g transform="translate(900, 210)">
+    <!-- Motion Trails & Wind Lines -->
+    <path d="M -40 160 L 40 150 M -20 180 L 60 170" stroke="#f59e0b" stroke-width="3" opacity="0.6" stroke-dasharray="10 8"/>
+    <!-- Shadow -->
+    <ellipse cx="50" cy="235" rx="45" ry="8" fill="#000000" opacity="0.6"/>
+
+    <!-- Legs (High Speed Dash) -->
+    <path d="M 20 160 L -30 190 L -55 220" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 20 160 L -30 190 L -55 220" stroke="#d97706" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 55 160 L 95 195 L 125 230" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 55 160 L 95 195 L 125 230" stroke="#fbbf24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Torso (Aggressive Forward Lean) -->
+    <g transform="rotate(22, 45, 110)">
+      <rect x="15" y="80" width="50" height="72" rx="12" fill="url(#bot4-body)" stroke="#0f172a" stroke-width="3"/>
+      <!-- Core Reactor -->
+      <circle cx="40" cy="110" r="10" fill="#fef08a" filter="url(#glow)"/>
+
+      <!-- Arms (Sprinting pose) -->
+      <path d="M 20 95 L -20 120 L -35 140" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 20 95 L -20 120 L -35 140" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 55 95 L 95 105 L 115 90" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 55 95 L 95 105 L 115 90" stroke="#fde047" stroke-width="5" stroke-linecap="round"/>
+
+      <!-- Head -->
+      <rect x="18" y="28" width="44" height="38" rx="9" fill="url(#bot4-body)" stroke="#0f172a" stroke-width="3"/>
+      <!-- Aerodynamic Visor -->
+      <polygon points="24,40 56,40 50,54 30,54" fill="#78350f"/>
+      <polygon points="26,42 54,42 49,52 31,52" fill="#fef08a" filter="url(#glow)"/>
+    </g>
+  </g>
+
+  <!-- ==================== TITLE & HEADER OVERLAY ==================== -->
+
+  <!-- Top Dark Gradient Overlay for Readability -->
+  <rect width="1200" height="170" fill="url(#bg-grad)" opacity="0.9"/>
+  <line x1="0" y1="170" x2="1200" y2="170" stroke="#334155" stroke-width="1" opacity="0.5"/>
+
+  <!-- Brand Badge -->
+  <g transform="translate(80, 42)">
+    <rect x="0" y="0" width="210" height="28" rx="14" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" opacity="0.9"/>
+    <text x="105" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#38bdf8" letter-spacing="1.5" text-anchor="middle">CROSS-SESSION RELAY</text>
+  </g>
+
+  <!-- Main Title "COMA" -->
+  <g transform="translate(80, 115)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="78" font-weight="900" fill="url(#title-grad)" letter-spacing="2" filter="url(#glow)">COMA</text>
+  </g>
+
+  <!-- Subtitle -->
+  <g transform="translate(340, 108)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="25" font-weight="600" fill="#94a3b8" letter-spacing="0.5">the cross-session relay for agents</text>
+    <text x="0" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="400" fill="#64748b" letter-spacing="0.2">Decoupled execution &amp; filesystem-based task handoffs (IN / OUT / DONE)</text>
+  </g>
+
+</svg>

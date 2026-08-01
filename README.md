@@ -1,4 +1,6 @@
-# COMA — COMmunication for Autonomous Subagents
+![COMA Banner](docs/assets/banner.svg)
+
+# COMA — Command & Communication for Autonomous Agents
 
 > **Namensmigration:** Das Projekt und das kanonische Python-Paket heißen
 > `COMA` bzw. `coma`. Der frühere Name `COMAS`/`comas` bleibt für eine
@@ -7,6 +9,8 @@
 
 > Die **Lebenszyklus-Schicht** für Agenten: Wie entsteht ein Agent als eigener
 > Prozess, und wie bleibt man mit ihm in Kontakt, solange er läuft?
+
+COMA steht primär als **session-übergreifender und session-unabhängiger Kommunikations- und Auftragskanal für Agents** (Dateisystem-basiert via `IN/`, `OUT/`, `DONE/`). Als Begriffsauslegung bietet sich **Command / Communication for Agents** an (mit Alternativ-Deutungen wie *agent spawner* oder *agent cloner*, ohne den Paket- und Repository-Namen `coma` zu ändern).
 
 Genau eine Verantwortung. COMA sperrt nichts, verwaltet keine Rechte und hält
 kein Gedächtnis. Es arbeitet mit Dateien und Prozessen — **ohne Konto, ohne Netz,
@@ -26,22 +30,20 @@ Keine Überschneidung.
 
 ## Wozu
 
-**COMA umgeht keine Sicherheitsgrenze.** Es nutzt dokumentierte CLI-Flags
-(`--permission-mode`, `--allowedTools` und Verwandte), um einen Client-Bug zu
-umschiffen, nicht um eine Prüfung zu deaktivieren.
+COMA dient primär als entkoppelter, session-unabhängiger Kommunikations- und Auftragskanal für Agents. Es erlaubt Orchestratoren und Sitzungen, Aufträge strukturiert abzulegen, Agenten-Prozesse zu steuern und Ergebnisse abzufragen, ohne an die Laufzeit einer einzelnen interaktiven Session gebunden zu sein.
 
-In einer **Remote-Control-Session** reicht Claude Code `--dangerously-skip-permissions`
-nicht an den Remote-Client durch (offene Issues
-[#71518](https://github.com/anthropics/claude-code/issues/71518),
-[#29214](https://github.com/anthropics/claude-code/issues/29214)). Folge: Jeder
-Tool-Aufruf fragt nach — auch bei Subagenten. Ist niemand am Rechner, **stehen sie
-still**: unbeaufsichtigte Agenten warten auf Klicks, die niemand gibt.
+### Anwendungsfälle
 
-Die Lösung ist nicht, mehr Regeln in eine Allowlist zu schreiben, sondern den
-Agenten **gar nicht erst in der RC-Session leben zu lassen**: ein eigener lokaler
-Prozess ausserhalb dieser Session, Kommunikation über das Dateisystem. Welche
-Werkzeuge dieser Prozess nutzen darf, entscheidet weiterhin der Permission-Mode —
-COMA setzt ihn nur an einer Stelle, an der er tatsächlich ankommt.
+1. **Historischer erster Use Case: Entkopplung von Remote-Control-Sessions**
+   In einer **Remote-Control-Session** reicht Claude Code `--dangerously-skip-permissions` nicht an den Remote-Client durch (offene Issues [#71518](https://github.com/anthropics/claude-code/issues/71518), [#29214](https://github.com/anthropics/claude-code/issues/29214)). Folge: Jeder Tool-Aufruf fragt nach — auch bei Agenten. Ist niemand am Rechner, **stehen sie still**: unbeaufsichtigte Agenten warten auf Klicks, die niemand gibt.
+
+   Die Lösung ist, den Agenten **gar nicht erst in der RC-Session leben zu lassen**: ein eigener lokaler Prozess außerhalb dieser Session, Kommunikation über das Dateisystem. **COMA umgeht keine Sicherheitsgrenze**, sondern nutzt dokumentierte CLI-Flags (`--permission-mode`, `--allowedTools` und Verwandte) an der Stelle, an der sie tatsächlich ankommen.
+
+2. **Session-übergreifende Handoffs & Multi-Agent Relays**
+   Aufgaben werden über Session-Grenzen hinweg zwischen Agents übergeben, ohne dass Prozesse blockieren oder Kontext verloren geht.
+
+3. **Hintergrund-Auftragsverarbeitung**
+   Dateisystem-basierte Steuerung (`IN/`, `OUT/`, `DONE/`) für autonome Hintergrund-Läufer und entkoppelte Tool-Ausführungen.
 
 ## Schnellstart
 
