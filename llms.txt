@@ -1,0 +1,80 @@
+# COMA — Command & Communication for Autonomous Agents
+
+> Machine-readable specification and RAG context index for `ellmos-ai/coma`.
+> Last-checked: 2026-08-03
+> Verification: 233 passed Pytest unit tests (100% green).
+
+## Overview
+
+COMA (`coma`) is a zero-dependency, local-first **agent lifecycle layer and session-decoupled communication channel**. It manages how autonomous AI agents (such as Claude Code CLI, Codex, Antigravity/Gemini, and Kimi Code) are spawned as independent subprocesses, monitored during execution, and communicated with via a file-based job board protocol.
+
+COMA operates purely on local files and standard processes—without external network services, databases, cloud servers, or user accounts.
+
+## Core Architecture & Responsibilities
+
+| Layer | Responsibility | Handled By |
+|---|---|---|
+| **Lifecycle & Spawner** | Process creation, CLI argument formatting, subprocess execution, stdout/stderr logging | **COMA (`coma.spawner`, `coma.adapters`)** |
+| **Decoupled Communication** | Session-independent job submission, progress tracking, status reporting, result retrieval | **COMA (`coma.protocol`, `coma.board`, `coma.runner`)** |
+| **Locking & Permissions** | File access rules, claim management (optional protocol integration) | `lock-master` / Roshambo |
+| **Agent Memory** | Context retention, decision history, attempt tracking | Roshambo / Task Memory |
+
+## The File-Based Job Board Protocol
+
+Job communication uses a directory structure (`_agentjobs/`) with distinct single-writer files to eliminate file-locking collisions across sessions:
+
+```
+IN/    <jobid>.md                       Job prompt / instruction (Markdown)
+OUT/   <jobid>.result.md                Final result output from agent
+       coma.<jobid>.json               Runner status (state: PENDING, RUNNING, DONE, FAILED)
+       coma.<jobid>.from-agent.jsonl   Agent-to-runner event stream (.jsonl)
+       coma.<jobid>.to-agent.jsonl     Runner-to-agent instruction stream (.jsonl)
+       coma.<jobid>.console.log        Combined stdout / stderr log
+DONE/  <jobid>.md                       Completed job prompt (moved upon success)
+```
+
+## CLI Adapters
+
+COMA abstracts CLI flag differences into verified adapters:
+- **`ClaudeAdapter`**: Formats flags for Anthropic Claude Code CLI (`-p`, `--permission-mode dontAsk`, `--allowedTools`, `--disallowedTools mcp__*`).
+- **`CodexAdapter`**: Formats flags for OpenAI Codex CLI (`exec`, workspace-write, `--output-last-message`).
+- **`AntigravityAdapter`**: Formats flags for Google Antigravity / AGY CLI.
+- **`KimiAdapter`**: Formats flags for Kimi Code CLI.
+
+## Quick Python API Usage
+
+```python
+from coma import JobBoard, JobRunner, ClaudeAdapter, Spawner
+
+# 1. Job Board Protocol
+board = JobBoard(r"C:\Users\user\_agentjobs")
+board.submit("job123", "# Instruction\nPerform technical audit and write output to OUT/job123.result.md\n")
+
+# 2. Run Job via Runner
+runner = JobRunner(board)
+result = runner.run("job123")
+
+# 3. Direct Spawner Usage
+adapter = ClaudeAdapter.preset("unattended")
+spawner = Spawner(adapter)
+handle = spawner.start("Audit code", log_file="audit.log")
+```
+
+## Quick CLI Usage
+
+```bat
+coma --root C:\Users\user\_agentjobs submit job123 --file prompt.md
+coma --root C:\Users\user\_agentjobs run job123 --dry-run
+coma --root C:\Users\user\_agentjobs status job123
+coma --root C:\Users\user\_agentjobs result job123
+coma adapters
+coma check .\coma-vendor.json
+```
+
+## Verification & Metadata
+
+- **Pytest Suite:** 233 passed unit tests (mocked subprocesses, 0 token consumption during test runs).
+- **Python Compatibility:** Python 3.10+
+- **License:** MIT
+- **Organization:** `ellmos-ai`
+- **Umbrella Ecosystem:** `open-bricks`

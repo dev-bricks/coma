@@ -2,369 +2,150 @@
 
 # COMA — Command & Communication for Autonomous Agents
 
-> **Namensmigration:** Das Projekt und das kanonische Python-Paket heißen
-> `COMA` bzw. `coma`. Der frühere Name `COMAS`/`comas` bleibt für eine
-> Übergangsphase als Import- und CLI-Alias verfügbar; neue Integrationen müssen
-> `coma` verwenden.
+**[English](README.md) | [Deutsch](README_de.md)**
 
-> Die **Lebenszyklus-Schicht** für Agenten: Wie entsteht ein Agent als eigener
-> Prozess, und wie bleibt man mit ihm in Kontakt, solange er läuft?
+[![Pytest Status](https://img.shields.io/badge/pytest-233%20passed-brightgreen.svg)](https://docs.pytest.org/)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Organization: ellmos-ai](https://img.shields.io/badge/organization-ellmos--ai-blue.svg)](https://github.com/ellmos-ai)
+[![Umbrella: open-bricks](https://img.shields.io/badge/umbrella-open--bricks-purple.svg)](https://github.com/open-bricks)
 
-COMA steht primär als **session-übergreifender und session-unabhängiger Kommunikations- und Auftragskanal für Agents** (Dateisystem-basiert via `IN/`, `OUT/`, `DONE/`). Als Begriffsauslegung bietet sich **Command / Communication for Agents** an (mit Alternativ-Deutungen wie *agent spawner* oder *agent cloner*, ohne den Paket- und Repository-Namen `coma` zu ändern).
+> [!NOTE]
+> **LLM / AI Context Index:** For an AI-optimized specification and architecture overview, see [`llms.txt`](llms.txt).
 
-Genau eine Verantwortung. COMA sperrt nichts, verwaltet keine Rechte und hält
-kein Gedächtnis. Es arbeitet mit Dateien und Prozessen — **ohne Konto, ohne Netz,
-ohne Cluster**. Null Abhängigkeiten, nur Standardbibliothek.
+> **Name Migration Notice:** The project and canonical Python package are named `COMA` / `coma`. The legacy name `COMAS`/`comas` remains available during a transition period as an import and CLI alias; new integrations must use `coma`.
 
-Konzept, Begründung und Abgrenzung: [`KONZEPT.md`](KONZEPT.md).
+> **The Agent Lifecycle Layer:** How is an autonomous AI agent spawned as a standalone process, and how do you communicate with it while it runs?
 
-| Schicht | Frage | Zuständig |
+COMA is a **session-decoupled communication channel and process spawner for AI agents** (file-system based via `IN/`, `OUT/`, `DONE/`). The name stands for **Command & Communication for Agents**.
+
+Single responsibility: COMA does not handle permissions, locks, or long-term agent memory. It works strictly with local files and standard OS processes—**no account required, no network services, no cluster dependencies**. Zero third-party dependencies, standard library only.
+
+See [`KONZEPT.md`](KONZEPT.md) for background details and architectural decisions.
+
+```mermaid
+flowchart TD
+    subgraph Client ["Orchestrator / Client Session"]
+        A[JobBoard.submit] -->|Writes job prompt| B["IN/<jobid>.md"]
+    end
+    
+    subgraph COMA ["COMA Agent Spawner"]
+        B --> C{JobRunner / Spawner}
+        C -->|Selects CLI Adapter| D[Claude / Codex / AGY / Kimi Adapter]
+        D -->|Spawns Subprocess| E[Local Agent Process]
+    end
+
+    subgraph Agent ["Agent Execution"]
+        E -->|Stream progress events| F["OUT/coma.<jobid>.from-agent.jsonl"]
+        E -->|Write final output| G["OUT/<jobid>.result.md"]
+    end
+
+    subgraph Completion ["Completion Phase"]
+        G --> H["OUT/coma.<jobid>.json (Status: DONE)"]
+        H --> I["Move IN/<jobid>.md -> DONE/<jobid>.md"]
+    end
+```
+
+| Layer | Core Question | Handled By |
 |---|---|---|
-| **Lebenszyklus** | Wie entsteht ein Agent, wie rede ich mit ihm? | **COMA** |
-| Anspruch | Wer darf was anfassen? | `team-lock` → `lock-master` → Roshambo |
-| Gedächtnis | Wurde das schon versucht, wie ging es aus? | Roshambo |
+| **Lifecycle & Communication** | How to spawn an agent and stream input/output? | **COMA** |
+| Access Control & Locks | Who can touch which resource/repo? | `lock-master` → Roshambo |
+| Memory & History | Was this attempted before, what was the outcome? | Roshambo |
 
-Die Verben trennen sauber: COMA spricht `spawn`, `send`, `poll`, `result`. Ein
-Koordinator spricht `claim`, `release`, `remember`, `recall`, `decide`, `status`.
-Keine Überschneidung.
+Separation of verbs: COMA uses `spawn`, `send`, `poll`, `result`. A coordinator uses `claim`, `release`, `remember`, `recall`, `decide`, `status`. No overlap.
 
-## Wozu
+## Use Cases
 
-COMA dient primär als entkoppelter, session-unabhängiger Kommunikations- und Auftragskanal für Agents. Es erlaubt Orchestratoren und Sitzungen, Aufträge strukturiert abzulegen, Agenten-Prozesse zu steuern und Ergebnisse abzufragen, ohne an die Laufzeit einer einzelnen interaktiven Session gebunden zu sein.
+1. **Decoupling from Remote Control (RC) Sessions**
+   In interactive remote-control sessions, CLI permission bypass flags like `--dangerously-skip-permissions` may fail to pass through to remote clients. COMA launches the agent as an independent OS process outside the RC session, communicating cleanly via file-system channels.
 
-### Anwendungsfälle
+2. **Session-Independent Handoffs & Relays**
+   Tasks can be handed off across session boundaries between agents without blocking process threads or losing context.
 
-1. **Historischer erster Use Case: Entkopplung von Remote-Control-Sessions**
-   In einer **Remote-Control-Session** reicht Claude Code `--dangerously-skip-permissions` nicht an den Remote-Client durch (offene Issues [#71518](https://github.com/anthropics/claude-code/issues/71518), [#29214](https://github.com/anthropics/claude-code/issues/29214)). Folge: Jeder Tool-Aufruf fragt nach — auch bei Agenten. Ist niemand am Rechner, **stehen sie still**: unbeaufsichtigte Agenten warten auf Klicks, die niemand gibt.
+3. **Background Job Execution**
+   File-system based queueing (`IN/`, `OUT/`, `DONE/`) for autonomous background runners and decoupled tool executions.
 
-   Die Lösung ist, den Agenten **gar nicht erst in der RC-Session leben zu lassen**: ein eigener lokaler Prozess außerhalb dieser Session, Kommunikation über das Dateisystem. **COMA umgeht keine Sicherheitsgrenze**, sondern nutzt dokumentierte CLI-Flags (`--permission-mode`, `--allowedTools` und Verwandte) an der Stelle, an der sie tatsächlich ankommen.
-
-2. **Session-übergreifende Handoffs & Multi-Agent Relays**
-   Aufgaben werden über Session-Grenzen hinweg zwischen Agents übergeben, ohne dass Prozesse blockieren oder Kontext verloren geht.
-
-3. **Hintergrund-Auftragsverarbeitung**
-   Dateisystem-basierte Steuerung (`IN/`, `OUT/`, `DONE/`) für autonome Hintergrund-Läufer und entkoppelte Tool-Ausführungen.
-
-## Schnellstart
+## Quickstart
 
 ```python
 from coma import JobBoard, JobRunner
 
-board = JobBoard(r"C:\Users\du\_agentjobs")
-board.submit("meinjob", "# Auftrag\n\nSchreibe das Ergebnis nach OUT/meinjob.result.md.\n")
+board = JobBoard(r"C:\Users\user\_agentjobs")
+board.submit("myjob", "# Instructions\nWrite result to OUT/myjob.result.md.\n")
 
-result = JobRunner(board).run("meinjob")
+result = JobRunner(board).run("myjob")
 print(result["status"]["state"], result["result_written"])
 ```
 
-Oder von der Kommandozeile:
+Or from the command line:
 
 ```bat
-coma --root C:\Users\du\_agentjobs run meinjob
-coma --root C:\Users\du\_agentjobs run meinjob --dry-run   :: nur zeigen, nichts starten
-coma --root C:\Users\du\_agentjobs status meinjob
-coma --root C:\Users\du\_agentjobs result meinjob
+coma --root C:\Users\user\_agentjobs run myjob
+coma --root C:\Users\user\_agentjobs run myjob --dry-run   :: preview command without launching
+coma --root C:\Users\user\_agentjobs status myjob
+coma --root C:\Users\user\_agentjobs result myjob
 ```
 
-**`--dry-run` zuerst.** Es baut das vollständige Kommando und zeigt es, ohne dass
-ein Token fließt.
-
-## Das Protokoll
+## Job Protocol
 
 ```
-IN/    <jobid>.md                       Auftrag (Freitext-Markdown)
-OUT/   <jobid>.result.md                Ergebnis
-       coma.<jobid>.json               Status      — nur der Runner schreibt
-       coma.<jobid>.from-agent.jsonl   Fortschritt — nur der Agent schreibt
-       coma.<jobid>.to-agent.jsonl     Nachrichten — nur der Orchestrator schreibt
-       coma.<jobid>.console.log        stdout/stderr des Laufs
-DONE/  <jobid>.md                       erledigter Auftrag
+IN/    <jobid>.md                       Job prompt (Markdown)
+OUT/   <jobid>.result.md                Final agent result output
+       coma.<jobid>.json               Runner status (written by runner only)
+       coma.<jobid>.from-agent.jsonl   Progress stream (written by agent only)
+       coma.<jobid>.to-agent.jsonl     Instruction stream (written by orchestrator only)
+       coma.<jobid>.console.log        Combined stdout / stderr log
+DONE/  <jobid>.md                       Completed job prompt
 ```
 
-**Ein Schreiber je Datei — kein Locking nötig, Kollision strukturell unmöglich.**
-Gelesen werden darf von allen. Das ist keine Vorsichtsmaßnahme, sondern eine
-Lektion: Eine geteilte Logdatei in OneDrive hat schon einmal zu Konfliktkopien
-geführt (Ticket `T-20260621-44`).
+**Single writer per file:** No locking required, structural collision prevention.
 
-`.jsonl` für die Kanäle, weil Anhängen atomar ist — ein Schreiber muss nicht erst
-lesen, parsen und neu schreiben.
+## Spawner Layer
 
-Die Auftragsdatei ist **freies Markdown** und enthält den vollständigen Prompt.
-Der Agent bekommt nur einen **Zeiger** darauf; er liest die Datei selbst und
-schreibt sein Ergebnis selbst als Datei. Damit hängt die Rückgabe weder an der
-stdout-Größe noch am Encoding.
-
-### Fernsteuern, lokal ausführen
-
-Eine RC-Session kann Aufträge schreiben und Ergebnisse abholen, ohne den Agenten
-selbst zu hosten:
-
-```python
-from coma import JobBoard, read_result, wait_for_finish
-
-board = JobBoard(root)
-paths = board.submit("meinjob", auftrag_markdown)   # 1. Auftrag schreiben
-# 2. Lokal läuft irgendwann: coma run meinjob
-status = wait_for_finish(paths, timeout=3600)        # 3. Statusdatei beobachten
-if status["exit_code"] == 0:
-    print(read_result(paths))
-```
-
-`wait_for_finish` beobachtet die **Statusdatei**, nicht den Prozess. Genau deshalb
-funktioniert es aus einem fremden Prozess, einer anderen Session oder über
-OneDrive von einem anderen Rechner.
-
-### Nachrichten während des Laufs
-
-```python
-from coma import from_agent, to_agent
-
-to_agent(paths).append({"kind": "hint", "text": "Nimm Variante B."})   # Orchestrator
-for record in from_agent(paths).read():                                # Agent-Meldungen
-    print(record)
-```
-
-Der Rollen-Parameter ist Dokumentation mit Zähnen: `to_agent(paths).append(…, role="agent")`
-wirft, statt eine Konfliktkopie zu erzeugen.
-
-## Die Spawn-Schicht
-
-Ein Adapter weiß genau zwei Dinge: wie das Kommando für seine CLI aussieht und
-welche Umgebung sie braucht. Er startet **nichts** — das macht der `Spawner`.
-Deshalb ist der Kommandobau ohne Prozessstart prüfbar.
+Adapters encapsulate CLI arguments for specific agent engines:
 
 ```python
 from coma import ClaudeAdapter, Spawner
 
 adapter = ClaudeAdapter(model="sonnet", permission_mode="dontAsk",
                         allowed_tools=["Read", "Write"], max_budget_usd=2.0)
-print(adapter.build_cmd("Sag Hallo"))   # nur die Argumentliste, nichts läuft
+print(adapter.build_cmd("Say Hello"))   # Returns argument list without running
 
 spawner = Spawner(adapter)
-result = spawner.run("Sag Hallo", log_file="lauf.log")
-handle = spawner.start("Sag Hallo", log_file="lauf.log")   # nicht blockierend
-while handle.poll() is None:
-    ...
+result = spawner.run("Say Hello", log_file="run.log")
 ```
 
-### Adapter
+### Verified Adapters
 
-| Adapter | Ziel | Stand |
+| Adapter | Target Engine | Status |
 |---|---|---|
-| `claude` | Claude Code CLI | **verifiziert** — Flags gegen `claude --help` 2.1.220 geprüft, echter Durchlauf belegt |
-| `codex` | native `codex exec` | **Verifiziert** — CLI 0.145.0, read-only/workspace-write, Ergebnisdatei via `--output-last-message` |
-| `agy` | Antigravity/Gemini | **Verifiziert** — agy 1.1.7, stdout und Exitcode live geprüft; Job-Ergebnisdatei bleibt kanonisch |
-| `kimi` | Kimi Code CLI | **Gerüst** — CLI 0.29.2 gefunden; der COMA-Adapter bleibt unverified, bis ein eigener Prompt-Lauf belegt ist |
+| `claude` | Anthropic Claude Code CLI | **Verified** — Flags checked against `claude --help` 2.1.220 |
+| `codex` | OpenAI Codex CLI | **Verified** — Tested against CLI 0.145.0 |
+| `agy` | Google Antigravity / AGY CLI | **Verified** — Tested against agy 1.1.7 |
+| `kimi` | Kimi Code CLI | **Skeleton** — CLI 0.29.2 detected |
 
-`verified` ist keine Kosmetik: Der `Spawner` **weigert sich**, einen Gerüst-Adapter
-zu starten, solange nicht ausdrücklich `allow_unverified=True` gesetzt ist. So ist
-Adapterwissen dokumentiert und getestet, ohne dass ein ungetesteter Aufrufweg
-unbemerkt in einen unbeaufsichtigten Lauf gerät.
+## CLI Commands
+
+| Command | Purpose |
+|---|---|
+| `run [jobid]` | Execute job from queue |
+| `run ... --dry-run` | Build and show command string without executing |
+| `cmd <prompt>` | Show command string for custom prompt |
+| `submit <jobid>` | Submit job prompt into `IN/` |
+| `status <jobid>` · `list` | Check status of job(s) |
+| `result <jobid>` · `log <jobid>` | Read result output or console log |
+| `send <jobid> <text>` · `inbox <jobid>` | Send message or read progress stream |
+| `adapters` | Show adapter status & detected binaries |
+| `check` · `vendor` | Verify or build vendor manifest |
+
+## Testing
 
 ```bat
-coma adapters      :: zeigt Stand, gefundene Binary und die Fallstricke je Adapter
+python -m pytest -q      :: 233 passed tests
 ```
 
-### Der Permission-Mode bleibt Parameter
+Tests use mocked subprocesses to ensure fast, deterministic verification with 0 token consumption.
 
-`dontAsk` und `bypassPermissions` sind **verschiedene Sicherheitsprofile**, nicht
-zwei Namen für dasselbe:
+## License
 
-- **`dontAsk`** fragt nie, sondern **verweigert**. Zusammen mit einer expliziten
-  Werkzeugliste kann ein Agent damit strukturell nicht hängenbleiben. Für
-  unbeaufsichtigte Läufe die bessere Wahl — und deshalb der Standard.
-- **`bypassPermissions`** kann in Sonderfällen weiterhin nachfragen. In einer
-  RC-Session heißt das: Der Agent steht, bis jemand klickt.
-
-„Verweigert und meldet das" ist besser als „wartet auf einen Klick, den niemand
-gibt". Fest verdrahtet bekäme ein Konsument stillschweigend das falsche Profil.
-
-**Was `dontAsk` *nicht* zusätzlich verengt (geprüft 2026-07-26, CLI 2.1.220):** Ein
-`Write` auf einen absoluten Pfad **außerhalb** des Arbeitsverzeichnisses wurde
-nicht verweigert — der Selbsttest lief mit cwd im COMA-Repo und schrieb nach
-OneDrive, Exit 0. Deshalb setzt COMA kein `cwd` von sich aus; `subprocess` erbt
-das des Aufrufers, wie im Bestand. Wer den Arbeitsbereich festlegen will,
-übergibt `cwd=` bzw. `--cwd`.
-
-Ebenfalls **nicht modelliert: `--add-dir`.** Das Flag existiert
-(`--add-dir <directories...>`, variadisch) und ist über `extra_args` erreichbar.
-Kein eigener Parameter, weil nicht verifiziert ist, ob mehrere Verzeichnisse als
-wiederholtes Flag oder als Werteliste zu übergeben sind — und Pfade können Kommas
-enthalten, die Komma-Verbindung der Werkzeuglisten ist hier also kein Ausweg. Eine
-geratene Kodierung wäre schlimmer als keine.
-
-Drei benannte Profile, jedes mit belegter Herkunft:
-
-```python
-ClaudeAdapter.preset("unattended")   # Standard: dontAsk + explizite Werkzeugliste
-ClaudeAdapter.preset("read_only")    # dontAsk + Read,Glob,Grep
-ClaudeAdapter.preset("bat_compat")   # die verifizierte Startschale: bypassPermissions
-```
-
-### Werkzeuglisten: zwei Flags, zwei Bedeutungen
-
-`--tools` begrenzt, welche Built-ins überhaupt **existieren**; `--allowedTools`
-gibt sie **vorab frei**. Verschiedene Dinge, deshalb zwei Parameter:
-
-```python
-ClaudeAdapter(allowed_tools=["Read"], available_tools=["Read", "Bash"])
-# --tools Read,Bash --allowedTools Read
-#   -> Bash ist da, aber nicht freigegeben: unter dontAsk wird es verweigert.
-```
-
-| Wert | Wirkung |
-|---|---|
-| `["Read", "Write"]` | Liste, komma-verbunden als **ein** Argument |
-| `MIRROR` (Standard für `available_tools`) | spiegelt `allowed_tools` |
-| `NO_RESTRICTION` / `None` | Flag entfällt ganz |
-| `[]` bei `available_tools` | `--tools ""` — alle Built-ins abschalten |
-
-MCP lässt sich über `--tools` nicht abschalten (dort stehen nur Built-ins);
-dafür gibt es `--disallowedTools mcp__*`, standardmäßig gesetzt (`allow_mcp=True`
-hebt es auf).
-
-## Harte Lektionen, die im Code stecken
-
-Diese vier stammen aus der Referenzimplementierung und sind hier keine
-Ratschläge, sondern Verhalten:
-
-1. **Der Prompt bleibt kurz und zeichenarm.** Lauf 1 des Selbsttests starb
-   **still** — kein Ergebnis, Status auf `running`, Fenster weg. Ursache: JSON mit
-   `\"` im Prompt; **CMD kennt keine Backslash-Escapes**, der Befehl zerriss. Alle
-   Anweisungen gehören in die Auftragsdatei, der Prompt zeigt nur darauf.
-   *In Python entfällt diese Gefahr* — `subprocess` übergibt die Argumente ohne
-   Shell. **Ausnahme:** Wird eine CLI über einen `.CMD`-Shim aufgerufen (npm legt
-   solche für `codex` und `kimi` an), parst Windows die Zeile erneut durch
-   `cmd.exe` — dann gilt die Lektion wieder. Deshalb nennen die Gerüst-Adapter die
-   absoluten `.exe`- bzw. `node`-Aufrufwege.
-2. **Keine eingebetteten Interpreter-Einzeiler in der Startschale** — gleiches
-   Quoting-Problem. Der Statusschreiber ist ein eigenes Modul und bleibt als
-   `python -m coma.status` argv-kompatibel zur Vorlage aufrufbar.
-3. **Immer `> log 2>&1`.** Jeder Lauf schreibt `coma.<jobid>.console.log`; der
-   `Spawner` leitet stdout und stderr zusammen dorthin und liest danach das Ende
-   zurück. Ein stiller Tod darf nicht möglich sein.
-4. **Die Argumentreihenfolge ist eine Sicherheitseigenschaft.** `--tools`,
-   `--allowedTools` und `--disallowedTools` sind **variadisch** (`<tools...>`).
-   Ein positionaler Prompt hinter einem solchen Flag würde als Werkzeugname
-   verschluckt. COMA setzt den Prompt darum direkt nach `-p` und verbindet alle
-   Werkzeuglisten komma-getrennt zu einem Argument.
-
-Ebenfalls erzwungen: `--output-format stream-json` setzt `--verbose` mit. Die CLI
-lehnt `stream-json` unter `-p` ohne `--verbose` ab; wer nur eines setzt, baut eine
-Option, die zur Laufzeit stirbt.
-
-## Mitgelieferte Kopien: Manifest **mit Prüfbefehl**
-
-Konsumenten binden COMA als mitgelieferte Kopie ein und aktualisieren über ein
-Manifest. Ein Manifest, das nur sagt „hier steckt COMA 0.1 drin", merkt nicht,
-wenn 0.3 nötig wäre — und schon gar nicht, wenn jemand in die Kopie
-hineingeschrieben hat.
-
-```bat
-:: Manifest schreiben (kopiert nichts -- das macht der Konsument)
-coma vendor .\coma-vendor.json --path vendor\coma --source C:\_Local_DEV\repos\coma\coma
-
-:: Prüfen. Exitcode 1 bei Drift -- daran kann ein Hook oder eine CI scheitern.
-coma check .\coma-vendor.json
-```
-
-Drei Fragen, drei Antworten:
-
-| Befund | Bedeutung |
-|---|---|
-| `MODIFIED` | Die Kopie wurde lokal verändert — ein Update überschreibt das still |
-| `MISSING` / `EXTRA` | Die Kopie ist unvollständig bzw. enthält Fremddateien |
-| `OUTDATED` | Die Quelle hat eine höhere Version |
-| `DRIFTED` | Die Quelle hat sich geändert, **ohne** die Version anzuheben |
-| `INFO` | Quelle nicht erreichbar: nur Integrität geprüft, nicht Aktualität |
-
-Vorbild ist `_scripts/check_editable_installs.py`, das genau diese Art stiller
-Drift sichtbar macht. Zwei Dinge kommen hinzu: **Inhalts-Hashes** (eine
-Versionsnummer erkennt nur „zu alt", nicht „verändert") und ein **Exitcode** — das
-ist der Unterschied zwischen einem Prüfbefehl und einem Bericht. Zeilenenden
-werden beim Hashen normalisiert, sonst meldete jede Kopie zwischen Windows und
-`core.autocrlf` falschen Alarm.
-
-## Lock-Schnittstelle: definiert, nicht implementiert
-
-COMA sperrt nichts. Es ruft Claims über eine schmale Schnittstelle auf, nicht
-gegen ein konkretes Modul — dann ist der späteren Wechsel ein Zeilenwechsel im
-Stack-Manifest statt eines Umbaus:
-
-- `comalock` = COMA + `lock-master` (lokal, offline)
-- `comaroshambo` = COMA + Roshambo (verteilt, Cloud)
-
-```python
-from coma import LockBackend, claimed   # LockBackend ist ein Protocol
-
-with claimed(mein_backend, "pfad/zum/projekt", kind="project"):
-    JobRunner(board).run("meinjob")
-```
-
-Es gibt hier **keinen** Import von `lock-master`, `team-lock` oder Roshambo, und
-das ist Absicht, kein fehlender Schritt: COMA muss abhängigkeitsfrei und
-offline-fähig bleiben. Ein Test prüft das nach. Der Standard ist `NullLock` —
-gewährt alles, merkt sich nichts.
-
-## Kommandozeile
-
-| Befehl | Zweck |
-|---|---|
-| `run [jobid]` | Job starten (Ersatz für `START-LOCAL-AGENT.bat`); ohne ID der älteste |
-| `run … --dry-run` | Kommando bauen und zeigen, nichts starten |
-| `cmd <prompt>` | Kommando für einen freien Prompt zeigen |
-| `submit <jobid>` | Auftrag in `IN/` ablegen (`--file` oder stdin) |
-| `status <jobid>` · `list` | Zustand eines Jobs bzw. aller Jobs |
-| `result <jobid>` · `log <jobid>` | Ergebnisdatei bzw. Konsolenlog ausgeben |
-| `send <jobid> <text>` · `inbox <jobid>` | Nachricht an den Agenten bzw. dessen Meldungen |
-| `adapters` | Adapter, Stand, gefundene Binary, Fallstricke |
-| `check` · `vendor` | Manifest prüfen bzw. schreiben |
-
-`--json` gibt es überall, `--root` bestimmt das Jobverzeichnis.
-
-## Tests
-
-```bat
-python -m pytest -q      :: 233 Tests
-```
-
-**Kein Test startet einen echten Prozess.** `subprocess` wird überall ersetzt; das
-ist Absicht, nicht Bequemlichkeit — ein Test, der `claude` startet, kostet Tokens,
-braucht Netz und wird beim ersten Ausfall abgeschaltet. Geprüft wird der
-Kommandobau gegen erwartete Argumentlisten, nach dem Vorbild von
-`swarm-ai/tests/test_runner.py`.
-
-Drei Grenzen des Moduls sind ebenfalls als Test hinterlegt, damit sie beim
-nächsten Umbau nicht still verloren gehen: kein Import von `llmauto`/`swarm-ai`
-(COMA ist eine **Extraktion**, keine Abhängigkeit), keine Fremdbibliothek, ein
-Schreiber je Datei.
-
-## Herkunft
-
-Die Spawn-Schicht ist eine **Extraktion**, kein Neubau. Drei Stellen bauten vorher
-unabhängig voneinander `claude`-Subprozessaufrufe:
-
-| Quelle | Beitrag |
-|---|---|
-| `llmauto/core/runner.py:17-51` | Der Keim: Wrapper-Klasse, `--fallback-model`, `--continue`, `--allowedTools`, konfigurierbarer Permission-Mode |
-| `swarm-ai/tools/runner.py:16-226` | `--max-budget-usd`, `--tools`, `--disallowedTools mcp__*`, `--no-session-persistence`, Validierung, Parallellauf |
-| `swarm-ai/experiments/dungeon/…_live.py:283-323` | `--output-format stream-json`, `--verbose`, `--safe-mode`, `CLAUDECODE`-Bereinigung |
-| `_control-center/START-LOCAL-AGENT.bat:72` | Standardkonfiguration und Zeiger-Prompt |
-| `_control-center/_agentjobs/coma_status.py` | Statusschreiber |
-
-Nicht Teil des Moduls und absichtlich lokal: `_control-center/_agentjobs/` und
-`START-LOCAL-AGENT.bat`. Die Startschale ist die Umgehung eines Client-Bugs, keine
-allgemeine Fähigkeit.
-
-`ellmos-agent-bridge` ist **kein** Konkurrent und kein künftiger COMA-Importeur:
-Es verwaltet Partner-Metadaten und trifft Empfehlungen, startet aber nichts.
-
-## Stand
-
-Version 0.2.0, in Entwicklung. Lizenz: MIT (Entscheidung 2026-07-26 — COMA startet
-lokale Prozesse und schreibt Dateien, hat also keine Netzfläche; eine Copyleft-Klausel
-mit Netzauslöser wie AGPL §13 würde hier nie greifen). Das öffentliche Quellrepository
-ist `https://github.com/dev-bricks/coma`; der `.MODULES`-Eintrag bleibt ein
-Plan-D-Pointer auf die lokalen Klone und dieses Repository. Die zentrale Registry
-`coma-reg.json` und weitere Produkt-/Release-Gates bleiben davon getrennte offene
-Punkte.
+MIT License. Developed under the `ellmos-ai` / `open-bricks` ecosystem.
