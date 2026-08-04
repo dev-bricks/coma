@@ -5,7 +5,11 @@ All notable changes to COMA will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — 2026-08-03
+## [Unreleased] — 2026-08-04
+
+### Fixed
+- Fixed 4 ruff lint issues in `comas/__init__.py` compatibility shim by adding `noqa: E402, F401` annotations (100% ruff clean).
+- Updated `llms.txt` Last-checked timestamp to 2026-08-04 and verified test suite (233 Pytest unit tests passed).
 
 ### Added
 - Root `llms.txt` context index file for AI/LLM discoverability and RAG context indexing (233 Pytest unit tests verified).

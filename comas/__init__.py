@@ -15,8 +15,8 @@ warnings.warn(
     stacklevel=2,
 )
 
-from coma import *  # noqa: F401,F403
-from coma import __all__, __version__
+from coma import *  # noqa: E402, F401, F403
+from coma import __all__, __version__  # noqa: E402, F401
 
 _MODULES = (
     "adapters",

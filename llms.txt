@@ -1,7 +1,7 @@
 # COMA — Command & Communication for Autonomous Agents
 
 > Machine-readable specification and RAG context index for `ellmos-ai/coma`.
-> Last-checked: 2026-08-03
+> Last-checked: 2026-08-04
 > Verification: 233 passed Pytest unit tests (100% green).
 
 ## Overview
